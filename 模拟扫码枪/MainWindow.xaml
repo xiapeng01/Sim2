@@ -1,0 +1,398 @@
+﻿<Window x:Class="模拟扫码枪.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:local="clr-namespace:模拟扫码枪"
+        mc:Ignorable="d"
+        Title="模拟扫码枪-Mica App" Height="450" Width="800">
+    <Window.DataContext>
+        <local:MainWindowViewModel/>
+    </Window.DataContext>
+    <Window.Resources>
+        <local:BoolReverseConverter x:Key="cvtReverse"/>
+        <DataTemplate x:Key="DtScanner" DataType="{x:Type local:IComm}">
+            <StackPanel>
+                <StackPanel.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="MinWidth" Value="80"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                    </Style>
+                    <Style TargetType="CheckBox">
+                        <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                        <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
+                    </Style>
+                </StackPanel.Resources>
+                <!--开关-->
+                <DockPanel>
+                    <TextBlock Text="开关"></TextBlock>
+                    <Border DockPanel.Dock="Right" Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center" >
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="Red"></Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="true">
+                                        <Setter Property="Background" Value="Green"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+                    <UniformGrid  Columns="3">
+                        <CheckBox Content="启用" IsChecked="{Binding IsEnabled}"></CheckBox>
+                        <CheckBox Content="校验触发内容" IsChecked="{Binding IsVerifyTriggerContent}"></CheckBox>
+                        <TextBox Text="{Binding ClientCount}" ></TextBox>
+                    </UniformGrid>
+                </DockPanel>
+                
+                <!--开关-->
+                <DockPanel>
+                    <TextBlock Text="接口类型"></TextBlock> 
+                    <ComboBox ItemsSource="{Binding InterfaceTypeValues}" SelectedItem="{Binding InterfaceType}"></ComboBox>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="Tcp参数"/>
+                    <UniformGrid  Columns="2">
+                        <TextBox Text="{Binding TcpIP}"/>
+                        <TextBox Text="{Binding TcpPort}"/>
+                    </UniformGrid>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="SerialPort参数"/>
+                    <UniformGrid Columns="2">
+                        <ComboBox ItemsSource="{Binding SerialPortNameValues}" SelectedItem="{Binding SerialPortName}"/>
+                        <TextBox Text="{Binding SerialPortBaudRate}"/>
+                    </UniformGrid>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="SerialPort参数"/>
+                    <UniformGrid Columns="3">
+                        <TextBox Text="{Binding SerialPortDataBits}"/>
+                        <ComboBox ItemsSource="{Binding ParityValues}" SelectedItem="{Binding SerialPortParity}"/>
+                        <ComboBox ItemsSource="{Binding StopBitsValues}" SelectedItem="{Binding SerialPortStopBits}"/>
+                    </UniformGrid>
+                </DockPanel>
+
+                <DockPanel>
+                    <TextBlock Text="工作模式"></TextBlock>                     
+                    <ComboBox ItemsSource="{Binding WorkModelTypes}" SelectedItem="{Binding WorkModel}"></ComboBox>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="附加内容"></TextBlock> 
+                    <TextBox Text="{Binding AppendContentLength}" DockPanel.Dock="Right" MinWidth="30"/>
+                    <ComboBox ItemsSource="{Binding AppendContentValues}" SelectedItem="{Binding AppendContent}"></ComboBox>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="附加结束符"></TextBlock> 
+                    <ComboBox ItemsSource="{Binding EndOfFramesValues}" SelectedItem="{Binding EndOfFrame}"></ComboBox>
+                </DockPanel>  
+                
+                <!--发送内容-->
+                <DockPanel>
+                    <TextBlock Text="发送内容类型"></TextBlock> 
+                    <ComboBox ItemsSource="{Binding ContentTypesValues}" SelectedItem="{Binding SendContentType}"/>
+                </DockPanel>  
+                <DockPanel>
+                    <TextBlock Text="发送内容"></TextBlock> 
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                        <TextBox Text="{Binding SendInterval}" MinWidth="30"/>
+                        <Button Content="Send" Command="{Binding SendCommand}"></Button>
+                    </StackPanel>
+                    <TextBox Text="{Binding SendContent}"/> 
+                </DockPanel>  
+                <DockPanel>
+                    <TextBlock Text="触发内容"></TextBlock> 
+                    <TextBox Text="{Binding TriggerContent}"/> 
+                </DockPanel>  
+                <DockPanel>
+                    <TextBlock Text="取消内容"></TextBlock> 
+                    <TextBox Text="{Binding CancelContent}"/> 
+                </DockPanel>  
+                
+                <!--接收内容-->
+                <DockPanel>
+                    <TextBlock Text="接收内容类型"></TextBlock> 
+                    <ComboBox ItemsSource="{Binding ContentTypesValues}" SelectedItem="{Binding ReceiveContentType}"/>
+                </DockPanel>  
+                <DockPanel>
+                    <TextBlock Text="接收内容"></TextBlock> 
+                    <TextBox Text="{Binding ReceiveContent}"/> 
+                </DockPanel>  
+                
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="DtScannerWrap" DataType="{x:Type local:ScannerWrap}">
+            <StackPanel>
+                <StackPanel.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="MinWidth" Value="80"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                    </Style>
+                    <Style TargetType="CheckBox">
+                        <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                        <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
+                    </Style>
+                </StackPanel.Resources>
+                <!--开关-->
+                <DockPanel>
+                    <TextBlock Text="开关"></TextBlock>
+                    <Border DockPanel.Dock="Right" Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center" >
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="Red"></Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="true">
+                                        <Setter Property="Background" Value="Green"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+                    <UniformGrid  Columns="3">
+                        <CheckBox Content="启用" IsChecked="{Binding Scanner.IsEnabled}"></CheckBox>
+                        <CheckBox Content="校验触发内容" IsChecked="{Binding Scanner.IsVerifyTriggerContent}"></CheckBox>
+                        <TextBox Text="{Binding Scanner.ClientCount}" ></TextBox>
+                    </UniformGrid>
+                </DockPanel>
+                <!--名称-->
+                <DockPanel>
+                    <TextBlock Text="名称"/>
+                    <TextBox Text="{Binding Scanner.Name}"/>
+                </DockPanel>
+                <!--开关-->
+                <DockPanel IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
+                    <TextBlock Text="接口类型"></TextBlock> 
+                    <ComboBox ItemsSource="{Binding Scanner.InterfaceTypeValues}" SelectedItem="{Binding InterfaceType}"></ComboBox>
+                </DockPanel>
+
+                <DockPanel  IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding InterfaceType}" Value="TcpClient">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding InterfaceType}" Value="TcpServer">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    <TextBlock Text="Tcp参数"/>
+                    <UniformGrid  Columns="2">
+                        <TextBox Text="{Binding Scanner.TcpIP}"/>
+                        <TextBox Text="{Binding Scanner.TcpPort}"/>
+                    </UniformGrid>
+                </DockPanel>
+                <DockPanel  IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding InterfaceType}" Value="SerialPort">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger> 
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    <TextBlock Text="SerialPort参数"/>
+                    <UniformGrid Columns="2">
+                        <ComboBox ItemsSource="{Binding Scanner.SerialPortNameValues}" SelectedItem="{Binding Scanner.SerialPortName}"/>
+                        <ComboBox SelectedItem="{Binding Scanner.SerialPortBaudRate}">
+                            <sys:Int32>4800</sys:Int32>
+                            <sys:Int32>9600</sys:Int32>
+                            <sys:Int32>19200</sys:Int32>
+                            <sys:Int32>38400</sys:Int32>
+                            <sys:Int32>115200</sys:Int32>
+                            <sys:Int32>230400</sys:Int32>
+                        </ComboBox>
+                    </UniformGrid>
+                </DockPanel>
+                <DockPanel  IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding InterfaceType}" Value="SerialPort">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    <TextBlock Text="SerialPort参数"/>
+                    <UniformGrid Columns="3">
+                        <ComboBox SelectedItem="{Binding Scanner.SerialPortDataBits}">
+                            <sys:Int32>7</sys:Int32>
+                            <sys:Int32>8</sys:Int32>
+                        </ComboBox>
+                        <ComboBox ItemsSource="{Binding Scanner.ParityValues}" SelectedItem="{Binding Scanner.SerialPortParity}"/>
+                        <ComboBox ItemsSource="{Binding Scanner.StopBitsValues}" SelectedItem="{Binding Scanner.SerialPortStopBits}"/>
+                    </UniformGrid>
+                </DockPanel>
+
+                <DockPanel>
+                    <TextBlock Text="工作模式"></TextBlock>                     
+                    <ComboBox ItemsSource="{Binding Scanner.WorkModelTypes}" SelectedItem="{Binding Scanner.WorkModel}"></ComboBox>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="附加内容"></TextBlock> 
+                    <TextBox Text="{Binding Scanner.AppendContentLength}" DockPanel.Dock="Right" MinWidth="30"/>
+                    <ComboBox ItemsSource="{Binding Scanner.AppendContentValues}" SelectedItem="{Binding Scanner.AppendContent}"></ComboBox>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="附加结束符"></TextBlock> 
+                    <ComboBox ItemsSource="{Binding Scanner.EndOfFramesValues}" SelectedItem="{Binding Scanner.EndOfFrame}"></ComboBox>
+                </DockPanel>  
+                
+                <!--发送内容-->
+                <DockPanel>
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlyReceive">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+
+                    <TextBlock Text="发送内容类型"></TextBlock> 
+                    <ComboBox ItemsSource="{Binding Scanner.ContentTypesValues}" SelectedItem="{Binding Scanner.SendContentType}"/>
+                </DockPanel>
+                <DockPanel>
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlyReceive">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="Passive">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    <TextBlock Text="发送内容"></TextBlock> 
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                        <TextBox Text="{Binding Scanner.SendInterval}" MinWidth="30"/>
+                        <Button Content="Send" Command="{Binding Scanner.SendCommand}"></Button>
+                    </StackPanel>
+                    <TextBox Text="{Binding Scanner.SendContent}"/> 
+                </DockPanel>
+                <DockPanel>
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="Passive">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger> 
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    <TextBlock Text="触发内容"></TextBlock> 
+                    <TextBox Text="{Binding Scanner.TriggerContent}"/> 
+                </DockPanel>
+                <DockPanel>
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlyReceive">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    
+                    <TextBlock Text="取消内容"></TextBlock>
+                    <Button Content="Cancel" DockPanel.Dock="Right" Command="{Binding Scanner.CancelCommand}"/>
+                    <TextBox Text="{Binding Scanner.CancelContent}"/> 
+                </DockPanel>  
+                
+                <!--接收内容-->
+                <DockPanel>
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlySend">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    <TextBlock Text="接收内容类型"></TextBlock> 
+                    <ComboBox ItemsSource="{Binding Scanner.ContentTypesValues}" SelectedItem="{Binding Scanner.ReceiveContentType}"/>
+                </DockPanel>
+                <DockPanel>
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlySend">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DockPanel.Style>
+                    <TextBlock Text="接收内容"></TextBlock> 
+                    <TextBox Text="{Binding Scanner.ReceiveContent}"/> 
+                </DockPanel>  
+                
+            </StackPanel>
+        </DataTemplate>
+    </Window.Resources>
+    <Grid>
+        <DockPanel  >
+            <UniformGrid Columns="2">
+                <ListBox ItemsSource="{Binding ScannerList}" SelectedItem="{Binding Scanner}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="local:ScannerWrap">
+                            <DockPanel HorizontalAlignment="Stretch" >
+                                <Border Height="15" Width="15" VerticalAlignment="Center" >
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Red"></Setter>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="true">
+                                                    <Setter Property="Background" Value="Green"></Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                                <CheckBox IsChecked="{Binding Scanner.IsEnabled}" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding Scanner.ClientCount}" MinWidth="20"/>
+                                <TextBox Text="{Binding Scanner.Name}"></TextBox>
+                                <TextBox Text="{Binding Scanner.SendContent}" MinWidth="50"></TextBox>
+                                <TextBox Text="{Binding Scanner.ReceiveContent}" MinWidth="50"></TextBox>
+                                <Button Content="Send" Command="{Binding Scanner.SendCommand}"></Button>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Add" Command="{Binding AddItemCommand}"></MenuItem>
+                            <MenuItem Header="Del" Command="{Binding RemoveItemCommand}"></MenuItem>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <TabControl>
+                    <TabItem Header="property">
+                        <Label Content="{Binding Scanner}" ContentTemplate="{StaticResource DtScannerWrap}"></Label>
+                    </TabItem>
+                    <TabItem Header="log">
+                        <TextBox Text="{Binding Message}" MouseDoubleClick="TextBox_MouseDoubleClick"/>
+                    </TabItem>
+                </TabControl>
+
+            </UniformGrid>
+        </DockPanel>
+        
+    </Grid>
+</Window>
