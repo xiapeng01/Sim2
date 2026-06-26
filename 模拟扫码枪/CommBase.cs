@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel;
-using System.Diagnostics;
-using System.Formats.Asn1;
+using System.Diagnostics; 
 using System.IO.Ports;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Newtonsoft.Json;
 
 namespace 模拟扫码枪;
 
@@ -84,17 +84,24 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
             OnPropertyChanged();
         }
     }
-
+    [JsonIgnore]
     public EnumInterfaceType[] InterfaceTypeValues => Enum.GetValues<EnumInterfaceType>();
+    [JsonIgnore]
     public EnumWorkModel[] WorkModelTypes => Enum.GetValues<EnumWorkModel>();
+    [JsonIgnore]
     public EnumAppendContent[] AppendContentValues => Enum.GetValues<EnumAppendContent>();
+    [JsonIgnore]
     public EnumEndOfFrame[] EndOfFramesValues => Enum.GetValues<EnumEndOfFrame>();
+    [JsonIgnore]
     public EnumContentType[] ContentTypesValues => Enum.GetValues<EnumContentType>();
+    [JsonIgnore]
 
-    public string[] SerialPortNameValues => new List<string>(new string[] { ""}).Concat(SerialPort.GetPortNames().OrderBy(x => x)).ToArray();
+    public string[] SerialPortNameValues => new List<string>(new [] {""}).Concat(SerialPort.GetPortNames().OrderBy(x => x)).ToArray();
+    [JsonIgnore]
     public Parity[] ParityValues => Enum.GetValues<Parity>();
+    [JsonIgnore]
     public StopBits[] StopBitsValues => Enum.GetValues<StopBits>();
-
+    [JsonIgnore]
     public IRelayCommand SendCommand
     {
         get => _sendCommand;
@@ -107,7 +114,7 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
     }
 
     IRelayCommand _cancelCommand;
-
+    [JsonIgnore]
     public IRelayCommand CancelCommand
     {
         get => _cancelCommand;
@@ -279,6 +286,7 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
         }
     }
 
+    [JsonIgnore]
     public bool IsConnected 
     { 
         get=>_isConnected;
@@ -612,19 +620,38 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
 
 public partial class ScannerWrap:ObservableObject,IDisposable
 {
-    [ObservableProperty] private AComm _scanner = new CommSerialPort();
-    [ObservableProperty] EnumInterfaceType _interfaceType= EnumInterfaceType.SerialPort;
 
+
+    [ObservableProperty] EnumInterfaceType _interfaceType= EnumInterfaceType.SerialPort;
+    [ObservableProperty] private AComm _scanner=new CommSerialPort();
+
+    public ScannerWrap()
+    {
+        _ = Task.Run(CheckScannerIsEnabled);
+    }
+
+    async Task CheckScannerIsEnabled()
+    {
+        while (!_isDisposed)
+        {
+            try
+            {
+                await Task.Delay(10);
+                if(!Scanner.IsEnabled) Scanner.Dispose();
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+    }
     
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (e.PropertyName is null) return;
-        if (e.PropertyName.Equals(nameof(InterfaceType)))
+        if (e.PropertyName is nameof(InterfaceType))
         {
-            Scanner.IsEnabled = false;
-            Scanner.Dispose();
-            Scanner = CreateObject(InterfaceType); 
+            Scanner = CreateObject(InterfaceType);
         }
     }
 
@@ -641,13 +668,42 @@ public partial class ScannerWrap:ObservableObject,IDisposable
                 
         } 
         throw new Exception("名称不正确");
-    } 
+    }
+
+    protected bool IsSocketConnected(TcpClient client)
+    {
+        return client != null && !(client.Client.Poll(1000, SelectMode.SelectRead) && (client.Available == 0)) && client.Connected;
+    }
+
+    protected bool IsSocketConnected(Socket client)
+    {
+        if (client == null || client == null) return false;
+
+        // 先检查基础状态
+        if (!client.Connected) return false;
+
+        try
+        {
+            // 检查底层 Socket 是否有可读状态，且可读数据量为 0（表示对端已关闭）
+            // 1000 为微秒级超时时间
+            bool poll = client.Poll(1000, SelectMode.SelectRead);
+            if (poll && client.Available == 0)
+            {
+                return false; // 连接已断开
+            }
+            return true; // 连接正常或有数据待读取
+        }
+        catch (SocketException)
+        {
+            return false;
+        }
+    }
 
 
     bool _isDisposed;
 
     public void Dispose()
-    {
+    { 
         Scanner?.Dispose();
         _isDisposed = true;
     }

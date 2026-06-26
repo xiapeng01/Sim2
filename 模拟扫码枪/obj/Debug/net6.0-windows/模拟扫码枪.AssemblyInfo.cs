@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("模拟扫码枪")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2d2cc1d9c0dfcfd803e4b081856a9b7837eed288")]
 [assembly: System.Reflection.AssemblyProductAttribute("模拟扫码枪")]
 [assembly: System.Reflection.AssemblyTitleAttribute("模拟扫码枪")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

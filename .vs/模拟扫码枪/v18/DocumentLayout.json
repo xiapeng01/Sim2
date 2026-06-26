@@ -1,37 +1,29 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\",
+  "WorkspaceRootPath": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|c:\\users\\zhong\\riderprojects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\commtcpserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\commtcpserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|c:\\users\\zhong\\riderprojects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\commserialport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\commserialport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|c:\\users\\zhong\\riderprojects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\mainwindowviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\mainwindowviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|c:\\users\\zhong\\riderprojects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|c:\\users\\zhong\\riderprojects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|c:\\users\\zhong\\riderprojects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\commbase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\commbase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|c:\\users\\zhong\\riderprojects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\commtcpclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|d:\\project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\commtcpclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\commtcpclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|c:\\users\\zhong\\riderprojects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|d:\\project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\commtcpserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\commtcpserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|d:\\project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\commserialport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\commserialport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|d:\\project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\mainwindowviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\mainwindowviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|d:\\project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|d:\\project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{626C192E-F238-41E3-ADC4-896D14AF4ADD}|\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA.csproj|solutionrelative:\u6A21\u62DF\u626B\u7801\u67AA\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -42,70 +34,39 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 3,
           "Children": [
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
-            },
-            {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "MainWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml",
+              "DocumentMoniker": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml",
               "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml",
-              "ToolTip": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml",
+              "ToolTip": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml",
               "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-05-25T10:56:08.993Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-25T10:56:08.993Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "CommBase.cs",
-              "DocumentMoniker": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\CommBase.cs",
-              "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\CommBase.cs",
-              "ToolTip": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\CommBase.cs",
-              "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\CommBase.cs",
-              "ViewState": "AgIAAIwAAAAAAAAAAAAAAKAAAAAaAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-25T11:16:38.482Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "CommTcpClient.cs",
-              "DocumentMoniker": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpClient.cs",
-              "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpClient.cs",
-              "ToolTip": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpClient.cs",
-              "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpClient.cs",
-              "ViewState": "AgIAAKoAAAAAAAAAAAAlwLsAAABKAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-26T09:13:05.938Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "CommTcpServer.cs",
-              "DocumentMoniker": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpServer.cs",
+              "DocumentMoniker": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpServer.cs",
               "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpServer.cs",
-              "ToolTip": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpServer.cs",
+              "ToolTip": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpServer.cs",
               "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpServer.cs",
-              "ViewState": "AgIAADsAAAAAAAAAAAAgwEkAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAYwB0AAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-26T09:13:16.5Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "CommSerialPort.cs",
-              "DocumentMoniker": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\CommSerialPort.cs",
+              "DocumentMoniker": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\CommSerialPort.cs",
               "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\CommSerialPort.cs",
-              "ToolTip": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\CommSerialPort.cs",
+              "ToolTip": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\CommSerialPort.cs",
               "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\CommSerialPort.cs",
               "ViewState": "AgIAABIAAAAAAAAAAAAIwCMAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -114,37 +75,37 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
+              "Title": "CommTcpClient.cs",
+              "DocumentMoniker": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpClient.cs",
+              "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpClient.cs",
+              "ToolTip": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpClient.cs",
+              "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\CommTcpClient.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAAAWwCkAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-26T09:13:05.938Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "MainWindowViewModel.cs",
-              "DocumentMoniker": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindowViewModel.cs",
+              "DocumentMoniker": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindowViewModel.cs",
               "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\MainWindowViewModel.cs",
-              "ToolTip": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindowViewModel.cs",
+              "ToolTip": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindowViewModel.cs",
               "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\MainWindowViewModel.cs",
-              "ViewState": "AgIAAAsAAAAAAAAAAADwvxAAAAASAAAAAAAAAA==",
+              "ViewState": "AgIAACUAAAAAAAAAAAAkwDgAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-25T11:34:06.162Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml.cs",
-              "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\MainWindow.xaml.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAUwBsAAAAcAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-26T09:36:36.18Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 5,
               "Title": "AssemblyInfo.cs",
-              "DocumentMoniker": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\AssemblyInfo.cs",
+              "DocumentMoniker": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\AssemblyInfo.cs",
               "RelativeDocumentMoniker": "\u6A21\u62DF\u626B\u7801\u67AA\\AssemblyInfo.cs",
-              "ToolTip": "C:\\Users\\Zhong\\RiderProjects\\\u6A21\u62DF\u626B\u7801\u67AA\\\u6A21\u62DF\u626B\u7801\u67AA\\AssemblyInfo.cs",
+              "ToolTip": "D:\\Project\\\u6A21\u62DF\u626B\u7801\u67AA2\\\u6A21\u62DF\u626B\u7801\u67AA\\AssemblyInfo.cs",
               "RelativeToolTip": "\u6A21\u62DF\u626B\u7801\u67AA\\AssemblyInfo.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
