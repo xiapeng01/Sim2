@@ -54,7 +54,16 @@ public class CommTcpClient:AComm
                     _client.SendTimeout = WriteTimeOut;
                     await _client.ConnectAsync(TcpIP, TcpPort);
                     await Task.Delay(1000);
+                }else
+                {
+                    if(!CheckConnected(_client))
+                    {
+                        _client.Dispose();
+                        _client = null;
+                    };
                 }
+
+
             }
 
             try

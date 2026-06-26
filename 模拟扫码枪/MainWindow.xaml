@@ -5,13 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:模拟扫码枪"
+        Closing="Window_Closing"
         mc:Ignorable="d"
-        Title="模拟扫码枪-Mica App" Height="450" Width="800">
+        Title="模拟扫码枪-Mica App" Height="600" Width="800">
     <Window.DataContext>
         <local:MainWindowViewModel/>
     </Window.DataContext>
     <Window.Resources>
         <local:BoolReverseConverter x:Key="cvtReverse"/>
+        <Style TargetType="TextBox" >
+            <Setter Property="Padding" Value="3"/>
+        </Style>
         <DataTemplate x:Key="DtScanner" DataType="{x:Type local:IComm}">
             <StackPanel>
                 <StackPanel.Resources>
@@ -133,6 +137,9 @@
                         <Setter Property="VerticalAlignment" Value="Center"></Setter>
                         <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
                     </Style>
+                    <Style TargetType="DockPanel">
+                        <Setter Property="Margin" Value="3"/>
+                    </Style>
                 </StackPanel.Resources>
                 <!--开关-->
                 <DockPanel>
@@ -152,8 +159,9 @@
                     <UniformGrid  Columns="3">
                         <CheckBox Content="启用" IsChecked="{Binding Scanner.IsEnabled}"></CheckBox>
                         <CheckBox Content="校验触发内容" IsChecked="{Binding Scanner.IsVerifyTriggerContent}"></CheckBox>
-                        <TextBox Text="{Binding Scanner.ClientCount}" ></TextBox>
+                        <TextBox Text="{Binding Scanner.ClientCount}" Margin="5,0"/>
                     </UniformGrid>
+                    
                 </DockPanel>
                 <!--名称-->
                 <DockPanel>
@@ -166,7 +174,7 @@
                     <ComboBox ItemsSource="{Binding Scanner.InterfaceTypeValues}" SelectedItem="{Binding InterfaceType}"></ComboBox>
                 </DockPanel>
 
-                <DockPanel  IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
+                <DockPanel Margin="3" IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -186,7 +194,7 @@
                         <TextBox Text="{Binding Scanner.TcpPort}"/>
                     </UniformGrid>
                 </DockPanel>
-                <DockPanel  IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
+                <DockPanel Margin="3" IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -210,7 +218,7 @@
                         </ComboBox>
                     </UniformGrid>
                 </DockPanel>
-                <DockPanel  IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
+                <DockPanel Margin="3" IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -247,7 +255,7 @@
                 </DockPanel>  
                 
                 <!--发送内容-->
-                <DockPanel>
+                <DockPanel Margin="3">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Visible"/>
@@ -262,7 +270,7 @@
                     <TextBlock Text="发送内容类型"></TextBlock> 
                     <ComboBox ItemsSource="{Binding Scanner.ContentTypesValues}" SelectedItem="{Binding Scanner.SendContentType}"/>
                 </DockPanel>
-                <DockPanel>
+                <DockPanel Margin="3">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Visible"/>
@@ -283,7 +291,7 @@
                     </StackPanel>
                     <TextBox Text="{Binding Scanner.SendContent}"/> 
                 </DockPanel>
-                <DockPanel>
+                <DockPanel Margin="3">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -294,10 +302,11 @@
                             </Style.Triggers>
                         </Style>
                     </DockPanel.Style>
-                    <TextBlock Text="触发内容"></TextBlock> 
+                    <TextBlock Text="触发内容" />
+                    <Button Content="Send" Command="{Binding Scanner.SendCommand}" DockPanel.Dock="Right" />
                     <TextBox Text="{Binding Scanner.TriggerContent}"/> 
                 </DockPanel>
-                <DockPanel>
+                <DockPanel Margin="3">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Visible"/>
@@ -315,7 +324,7 @@
                 </DockPanel>  
                 
                 <!--接收内容-->
-                <DockPanel>
+                <DockPanel Margin="3">
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Visible"/>
@@ -329,7 +338,7 @@
                     <TextBlock Text="接收内容类型"></TextBlock> 
                     <ComboBox ItemsSource="{Binding Scanner.ContentTypesValues}" SelectedItem="{Binding Scanner.ReceiveContentType}"/>
                 </DockPanel>
-                <DockPanel>
+                <DockPanel  Margin="3" >
                     <DockPanel.Style>
                         <Style TargetType="DockPanel">
                             <Setter Property="Visibility" Value="Visible"/>
@@ -350,43 +359,79 @@
     <Grid>
         <DockPanel  >
             <UniformGrid Columns="2">
-                <ListBox ItemsSource="{Binding ScannerList}" SelectedItem="{Binding Scanner}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate DataType="local:ScannerWrap">
-                            <DockPanel HorizontalAlignment="Stretch" >
-                                <Border Height="15" Width="15" VerticalAlignment="Center" >
+                <DockPanel>
+                    <UniformGrid Rows="1" DockPanel.Dock="Bottom" Margin="5">
+                        <UniformGrid.Resources>
+                            <Style TargetType="Button" >
+                                <Setter Property="Margin" Value="3"/>
+                                <Setter Property="Padding" Value="5"/>
+                                <d:Setter Property="MinHeight" Value="35"/>
+                                <Setter Property="FontSize" Value="18"/>
+                            </Style>
+                        </UniformGrid.Resources>
+                        <Button Content="增加" Command="{Binding AddItemCommand}" Foreground="Green" FontWeight="Bold"/>
+                        <Button Content="删除" Command="{Binding RemoveItemCommand}" Foreground="Red" FontWeight="Bold"/>
+                        <Button Content="保存" Command="{Binding SaveAllItemsCommand}" Foreground="Blue" FontWeight="Bold"/>
+                    </UniformGrid>
+                    <ListBox ItemsSource="{Binding ScannerList}" SelectedItem="{Binding Scanner}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="local:ScannerWrap">
+                                <Border Padding="8" CornerRadius="5" BorderThickness="2" d:BorderBrush="Gray">
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="Background" Value="Red"></Setter>
+                                            <Setter Property="BorderBrush" Value="Red"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="true">
-                                                    <Setter Property="Background" Value="Green"></Setter>
+                                                <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="Green"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
+                                    <DockPanel HorizontalAlignment="Stretch" >
+                                        <d:Border Height="15" Width="15" VerticalAlignment="Center" >
+                                            <d:Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Red"></Setter>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="true">
+                                                            <Setter Property="Background" Value="Green"></Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </d:Border.Style>
+                                        </d:Border>
+                                        <Button Content="Send" Command="{Binding Scanner.SendCommand}" DockPanel.Dock="Right" Padding="5"/>
+                                        <CheckBox IsChecked="{Binding Scanner.IsEnabled}" VerticalAlignment="Center" Margin="5"/>
+                                        <TextBox IsReadOnly="True" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="3" Text="{Binding Scanner.ClientCount}" />
+                                        <TextBox Text="{Binding InterfaceType}" Padding="3" VerticalAlignment="Stretch" VerticalContentAlignment="Center"/>
+                                        <TextBox Text="{Binding Scanner.Name}" MinWidth="80" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                                        <UniformGrid Columns="1" >
+                                            <TextBox Text="{Binding Scanner.SendContent}" />
+                                            <TextBox Text="{Binding Scanner.ReceiveContent}"  />
+                                        </UniformGrid>
+
+                                    </DockPanel>
                                 </Border>
-                                <CheckBox IsChecked="{Binding Scanner.IsEnabled}" VerticalAlignment="Center"/>
-                                <TextBox Text="{Binding Scanner.ClientCount}" MinWidth="20"/>
-                                <TextBox Text="{Binding Scanner.Name}"></TextBox>
-                                <TextBox Text="{Binding Scanner.SendContent}" MinWidth="50"></TextBox>
-                                <TextBox Text="{Binding Scanner.ReceiveContent}" MinWidth="50"></TextBox>
-                                <Button Content="Send" Command="{Binding Scanner.SendCommand}"></Button>
-                            </DockPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                    <ListBox.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Add" Command="{Binding AddItemCommand}"></MenuItem>
-                            <MenuItem Header="Del" Command="{Binding RemoveItemCommand}"></MenuItem>
-                        </ContextMenu>
-                    </ListBox.ContextMenu>
-                </ListBox>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Add" Command="{Binding AddItemCommand}"></MenuItem>
+                                <MenuItem Header="Del" Command="{Binding RemoveItemCommand}"></MenuItem>
+                            </ContextMenu>
+                        </ListBox.ContextMenu>
+                    </ListBox>
+                </DockPanel>
                 <TabControl>
-                    <TabItem Header="property">
+                    <TabItem Header="属性">
                         <Label Content="{Binding Scanner}" ContentTemplate="{StaticResource DtScannerWrap}"></Label>
                     </TabItem>
-                    <TabItem Header="log">
+                    <TabItem Header="消息">
                         <TextBox Text="{Binding Message}" MouseDoubleClick="TextBox_MouseDoubleClick"/>
                     </TabItem>
                 </TabControl>

@@ -28,4 +28,12 @@ public partial class MainWindow : Window
             vm.Message = "";
         }
     }
+
+    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if(this.DataContext is MainWindowViewModel vm)
+        {
+            vm.SaveSetting();
+        }
+    }
 }

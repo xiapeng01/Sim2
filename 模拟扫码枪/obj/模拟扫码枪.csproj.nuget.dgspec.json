@@ -1,31 +1,36 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Zhong\\RiderProjects\\模拟扫码枪\\模拟扫码枪\\模拟扫码枪.csproj": {}
+    "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Zhong\\RiderProjects\\模拟扫码枪\\模拟扫码枪\\模拟扫码枪.csproj": {
+    "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Zhong\\RiderProjects\\模拟扫码枪\\模拟扫码枪\\模拟扫码枪.csproj",
+        "projectUniqueName": "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj",
         "projectName": "模拟扫码枪",
-        "projectPath": "C:\\Users\\Zhong\\RiderProjects\\模拟扫码枪\\模拟扫码枪\\模拟扫码枪.csproj",
-        "packagesPath": "C:\\Users\\Zhong\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Zhong\\RiderProjects\\模拟扫码枪\\模拟扫码枪\\obj\\",
+        "projectPath": "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj",
+        "packagesPath": "D:\\LocalCache\\nuget\\packages",
+        "outputPath": "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "D:\\LocalCache\\nuget\\packages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\Zhong\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\XiapPeng\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net6.0-windows"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "D:\\LocalCache\\nuget\\packages": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net6.0-windows7.0": {
+          "net6.0-windows": {
+            "framework": "net6.0-windows7.0",
             "targetAlias": "net6.0-windows",
             "projectReferences": {}
           }
@@ -43,7 +48,8 @@
         "SdkAnalysisLevel": "10.0.300"
       },
       "frameworks": {
-        "net6.0-windows7.0": {
+        "net6.0-windows": {
+          "framework": "net6.0-windows7.0",
           "targetAlias": "net6.0-windows",
           "dependencies": {
             "CommunityToolkit.Mvvm": {
@@ -78,7 +84,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301\\RuntimeIdentifierGraph.json"
         }
       }
     }

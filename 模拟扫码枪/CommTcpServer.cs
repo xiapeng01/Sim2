@@ -57,7 +57,7 @@ public class CommTcpServer:AComm
         {
             try
             {
-                await Task.Delay(500);//每500毫秒执行一次
+                await Task.Delay(500);//每500毫秒执行一次  
                 var status = _clients.Any(CheckConnected);
                 Post(() => SetIsConnected(status));
                 var count= _clients.Count;
@@ -95,9 +95,9 @@ public class CommTcpServer:AComm
         while (!IsDisposed)
         {
             await Task.Delay(10);//间隔10毫秒
-            if (!IsEnabled)
+            try
             {
-                try
+                if (!IsEnabled)
                 {
                     foreach (var client in _clients)
                     {
@@ -106,22 +106,22 @@ public class CommTcpServer:AComm
                     _clients.Clear();
                     _server?.Stop();
                     _server = null;
+                    continue;
                 }
-                catch (Exception e)
+
+                if (_server == null)
                 {
-                    Console.WriteLine(e);
-                    throw;
+                    _server = new TcpListener(IPAddress.Any, TcpPort);
+                    _server.Start();
                 }
-                continue;
             }
-
-            if (_server == null)
+            catch (Exception ex)
             {
-                _server = new TcpListener(IPAddress.Any, TcpPort);
-                _server.Start();
+                 
             }
 
-            return;
+
+            continue;
 
             try
             {
@@ -208,10 +208,11 @@ public class CommTcpServer:AComm
 
     async Task DoClientWork(TcpClient? client)
     {
-        while(!IsDisposed &&(client !=null) && ! CheckConnected(client))
+        while(!IsDisposed &&(client !=null) && CheckConnected(client))
         {
             try
             {
+                await Task.Delay(5);
                 switch (WorkModel)
                 {
                     case EnumWorkModel.Passive:
