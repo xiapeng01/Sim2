@@ -9,11 +9,13 @@ namespace 模拟扫码枪;
 
 public class CommTcpClient:AComm
 {
-    private TcpClient? _client = null; 
+    private TcpClient? _client = null;
+    // 保护 _client 的读写：工作循环、发送线程、释放流程会并发访问
+    private readonly object _clientLock = new();
 
     public CommTcpClient()
-    { 
-        _ = Task.Run(DoWork);//被动接收和仅接受模式 
+    {
+        _ = Task.Run(DoWork);//被动接收和仅接受模式
         _=Task.Run(CheckConnectedTask);//检查状态线程
     }
 
@@ -24,7 +26,11 @@ public class CommTcpClient:AComm
             try
             {
                 await Task.Delay(500);//每500毫秒执行一次
-                var status = _client != null && CheckConnected(_client);
+                bool status;
+                lock (_clientLock)
+                {
+                    status = _client != null && CheckConnected(_client);
+                }
                 Post(() => SetIsConnected(status));
             }
             catch (Exception ex)
@@ -39,31 +45,45 @@ public class CommTcpClient:AComm
         while (!IsDisposed)
         {
             await Task.Delay(10);//间隔10毫秒
+            if (IsDisposed) break;
             if (!IsEnabled)
             {
-                _client?.Dispose();
-                _client = null;
+                lock (_clientLock)
+                {
+                    _client?.Dispose();
+                    _client = null;
+                }
+                SetIsConnected(false);
+                await Task.Delay(500);
                 continue;
             }
             else
             {
                 if (_client is null)
                 {
-                    _client = new TcpClient();
-                    _client.ReceiveTimeout = ReadTimeOut;
-                    _client.SendTimeout = WriteTimeOut;
-                    await _client.ConnectAsync(TcpIP, TcpPort);
-                    await Task.Delay(1000);
-                }else
-                {
-                    if(!CheckConnected(_client))
+                    // 连接失败（对端未启动/端口不通）必须自己捕获并重试，
+                    // 否则异常会冲出 while 循环，工作线程永久退出且没有任何提示。
+                    if (!await TryConnectAsync())
                     {
-                        _client.Dispose();
-                        _client = null;
-                    };
+                        await Task.Delay(2000);//失败后退避 2 秒再重试
+                        continue;
+                    }
+                    await Task.Delay(1000);
                 }
-
-
+                else
+                {
+                    bool alive;
+                    lock (_clientLock)
+                    {
+                        alive = _client is not null && CheckConnected(_client);
+                        if (!alive)
+                        {
+                            _client?.Dispose();
+                            _client = null;
+                        }
+                    }
+                    if (!alive) continue;
+                }
             }
 
             try
@@ -154,8 +174,11 @@ public class CommTcpClient:AComm
         try
         {
             SetIsConnected(false);
-            _client?.Dispose();
-            _client = null;
+            lock (_clientLock)
+            {
+                _client?.Dispose();
+                _client = null;
+            }
         }
         catch (Exception ex)
         {
@@ -163,17 +186,72 @@ public class CommTcpClient:AComm
         }
     }
 
-    Stream GetStream()
-    { 
-        if (_client is null)
+    /// <summary>
+    /// 尝试连接对端。成功返回 true；失败时上报异常并返回 false，由调用方退避后重试。
+    /// </summary>
+    private async Task<bool> TryConnectAsync()
+    {
+        TcpClient? client = null;
+        try
         {
-            _client = new TcpClient();
-            _client.ReceiveTimeout = ReadTimeOut;
-            _client.SendTimeout = WriteTimeOut;
-            _client.Connect(TcpIP,TcpPort);
+            client = new TcpClient();
+            client.ReceiveTimeout = ReadTimeOut;
+            client.SendTimeout = WriteTimeOut;
+            await client.ConnectAsync(TcpIP, TcpPort);
+            lock (_clientLock)
+            {
+                if (IsDisposed)
+                {
+                    // 释放流程与连接流程并发，直接丢弃刚建立的连接
+                    client.Dispose();
+                    return false;
+                }
+                _client = client;
+            }
+            return true;
         }
-        return _client.GetStream();
-    } 
+        catch (Exception ex)
+        {
+            try { client?.Dispose(); } catch { /*忽略*/ }
+            lock (_clientLock) { _client = null; }
+            UpdateException($"连接 [{TcpIP}:{TcpPort}] 失败：{ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>释放 Socket 资源</summary>
+    protected override void ReleaseResources()
+    {
+        try
+        {
+            lock (_clientLock)
+            {
+                _client?.Dispose();
+                _client = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("释放 Socket 失败:" + ex.Message);
+        }
+    }
+
+    Stream GetStream()
+    {
+        lock (_clientLock)
+        {
+            if (_client is null)
+            {
+                // 连接失败会抛出，由调用方已有 try/catch 处理
+                var client = new TcpClient();
+                client.ReceiveTimeout = ReadTimeOut;
+                client.SendTimeout = WriteTimeOut;
+                client.Connect(TcpIP, TcpPort);
+                _client = client;
+            }
+            return _client.GetStream();
+        }
+    }
     
     public override string Trigger()
     {

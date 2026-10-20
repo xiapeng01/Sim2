@@ -4,6 +4,17 @@
              xmlns:local="clr-namespace:模拟扫码枪"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Palette.xaml"/>
+                <ResourceDictionary Source="Themes/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- 全局字体 -->
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -7,9 +7,11 @@ using System.Text;
 namespace 模拟扫码枪;
 
 public class CommTcpServer:AComm
-{  
+{
     private TcpListener? _server ;
     private readonly List<TcpClient> _clients = new();
+    // 保护 _server 的读写：监听线程、工作循环、释放流程会并发访问
+    private readonly object _serverLock = new();
 
     public CommTcpServer()
     {
@@ -27,12 +29,20 @@ public class CommTcpServer:AComm
             try
             {
                 await Task.Delay(100);
-                if (_clients.All(CheckConnected)) continue;
+                bool anyDead;
+                lock (_clients)
+                {
+                    anyDead = _clients.Any(c => !CheckConnected(c));
+                }
+                if (!anyDead) continue;
 
                 try
                 {
                     await _sem.WaitAsync();
-                    _clients.RemoveAll(a => !CheckConnected(a));
+                    lock (_clients)
+                    {
+                        _clients.RemoveAll(a => !CheckConnected(a));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -47,7 +57,7 @@ public class CommTcpServer:AComm
             catch (Exception ex)
             {
                 UpdateException(ex.Message);
-            } 
+            }
         }
     }
 
@@ -57,10 +67,15 @@ public class CommTcpServer:AComm
         {
             try
             {
-                await Task.Delay(500);//每500毫秒执行一次  
-                var status = _clients.Any(CheckConnected);
+                await Task.Delay(500);//每500毫秒执行一次
+                bool status;
+                int count;
+                lock (_clients)
+                {
+                    status = _clients.Any(CheckConnected);
+                    count = _clients.Count;
+                }
                 Post(() => SetIsConnected(status));
-                var count= _clients.Count;
                 Post(() => { ClientCount = count; });
             }
             catch (Exception ex)
@@ -77,16 +92,38 @@ public class CommTcpServer:AComm
             try
             {
                 await Task.Delay(50);
-                if(_server is null) continue;
-                var client=await _server.AcceptTcpClientAsync();
-                _=Task.Run(() => DoClientWork(client));
-                _clients.Add(client);
+                TcpListener? server;
+                lock (_serverLock)
+                {
+                    server = _server;
+                }
+                if (server is null) continue;
+                var client = await server.AcceptTcpClientAsync();
+                _ = Task.Run(() => DoClientWork(client));
+                lock (_clients)
+                {
+                    _clients.Add(client);
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // 监听已被停止，属于正常退出路径
+            }
+            catch (InvalidOperationException)
+            {
+                // 监听已被停止，属于正常退出路径
+            }
+            catch (SocketException ex)
+            {
+                UpdateException($"接受客户端连接失败：{ex.Message}");
+                await Task.Delay(1000);
             }
             catch (Exception ex)
             {
                 UpdateException(ex.Message);
+                await Task.Delay(1000);
             }
-            
+
         }
     }
 
@@ -95,114 +132,90 @@ public class CommTcpServer:AComm
         while (!IsDisposed)
         {
             await Task.Delay(10);//间隔10毫秒
+            if (IsDisposed) break;
             try
             {
                 if (!IsEnabled)
                 {
-                    foreach (var client in _clients)
+                    lock (_clients)
                     {
-                        client.Dispose();
+                        foreach (var client in _clients)
+                        {
+                            client.Dispose();
+                        }
+                        _clients.Clear();
                     }
-                    _clients.Clear();
-                    _server?.Stop();
-                    _server = null;
+                    StopServer();
+                    SetIsConnected(false);
+                    await Task.Delay(500);
                     continue;
                 }
 
-                if (_server == null)
+                bool needStart;
+                lock (_serverLock)
                 {
-                    _server = new TcpListener(IPAddress.Any, TcpPort);
-                    _server.Start();
+                    needStart = _server == null;
+                }
+                if (needStart)
+                {
+                    // 监听端口可能被占用（Address already in use）。
+                    // 必须捕获并上报，且失败后把 _server 复位，否则永远不会重试。
+                    if (!TryStartServer())
+                    {
+                        await Task.Delay(2000);//失败后退避 2 秒再重试
+                        continue;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                 
-            }
-
-
-            continue;
-
-            try
-            {
-                switch (WorkModel)
-                {
-                    case EnumWorkModel.Passive:
-                        var s = GetStream();
-                        byte[] buffer = new byte[4096];
-                        int n = s.Read(buffer); //读取所有内容
-                        if (n > 0)
-                        {
-                            Array.Resize(ref buffer, n);
-                            var str = Encoding.UTF8.GetString(buffer);
-                            UpdateMessage($"收到内容[{str}]");
-                            if (IsVerifyTriggerContent) //通过校验才发送
-                            {
-                                switch (ReceiveContentType)
-                                {
-                                    default:
-                                    case EnumContentType.Text: //字符串模式不比较空白字符
-                                        var clearTriggerString = TriggerContent.Trim();
-                                        if (clearTriggerString.Equals(str.Trim()))
-                                        {
-                                            Send();
-                                        }
-
-                                        break;
-                                    case EnumContentType.Hex:
-                                        var triggerData = HexStringToByteArray(TriggerContent);
-                                        if (CompareByteArray(Encoding.UTF8.GetBytes(str), triggerData))
-                                        {
-                                            Send();
-                                        }
-
-                                        break;
-                                }
-                            }
-                            else //不校验,直接发送
-                            {
-                                Send(); //执行发送内容
-                            }
-                        }
-
-
-                        SetIsConnected(true);
-                        Debug.WriteLine(DateTime.Now);
-                        break;
-                    case EnumWorkModel.OnlyReceive:
-                        var s2 = GetStream();
-                        var buffer2 = new byte[4096];
-                        var n2 = s2.Read(buffer2);
-                        if (n2 > 0)
-                        {
-                            Array.Resize(ref buffer2, n2);
-                            var str = Encoding.UTF8.GetString(buffer2); //读取所有内容
-                            UpdateMessage($"收到内容[{str}]");
-                            UpdateReceiveContent(str);
-                        }
-
-                        SetIsConnected(true);
-                        Debug.WriteLine(DateTime.Now);
-                        break;
-                }
-            }
-            catch (IOException)
-            {
-                
-            }
-            catch (SocketException)
-            {
-                
-            }
-            catch (TimeoutException)
-            {
-                
-            }
-            catch (Exception ex)
-            {
-                Close();
                 UpdateException(ex.Message);
+                await Task.Delay(1000);
             }
+        }
+    }
+
+    /// <summary>
+    /// 启动监听。成功返回 true；失败时上报异常并复位 _server，由调用方退避后重试。
+    /// </summary>
+    private bool TryStartServer()
+    {
+        TcpListener? listener = null;
+        try
+        {
+            listener = new TcpListener(IPAddress.Any, TcpPort);
+            listener.Start();
+            lock (_serverLock)
+            {
+                _server = listener;
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            try { listener?.Stop(); } catch { /*忽略*/ }
+            lock (_serverLock) { _server = null; }
+            UpdateException($"启动 TCP 监听端口 [{TcpPort}] 失败：{ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>停止并释放监听端口</summary>
+    private void StopServer()
+    {
+        TcpListener? server;
+        lock (_serverLock)
+        {
+            server = _server;
+            _server = null;
+        }
+        try
+        {
+            server?.Stop();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("停止监听失败:" + ex.Message);
         }
     }
 
@@ -299,15 +312,46 @@ public class CommTcpServer:AComm
         try
         {
             SetIsConnected(false);
-            foreach (var client in _clients)
+            lock (_clients)
             {
-                client.Dispose();
+                foreach (var client in _clients)
+                {
+                    client.Dispose();
+                }
+                _clients.Clear();
             }
-            _clients.Clear();
         }
         catch (Exception ex)
         {
             UpdateException(ex.Message);
+        }
+    }
+
+    /// <summary>释放监听端口与所有客户端连接</summary>
+    protected override void ReleaseResources()
+    {
+        try
+        {
+            StopServer();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("停止监听失败:" + ex.Message);
+        }
+        try
+        {
+            lock (_clients)
+            {
+                foreach (var client in _clients)
+                {
+                    client.Dispose();
+                }
+                _clients.Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("释放客户端失败:" + ex.Message);
         }
     }
 
@@ -316,8 +360,12 @@ public class CommTcpServer:AComm
         try
         {
             _sem.Wait();
-            var client = _clients.FirstOrDefault(CheckConnected);
-            if (client is null) throw new Exception();
+            TcpClient? client;
+            lock (_clients)
+            {
+                client = _clients.FirstOrDefault(CheckConnected);
+            }
+            if (client is null) throw new Exception("没有已连接的客户端");
             client.ReceiveTimeout = ReadTimeOut;
             client.SendTimeout = WriteTimeOut;
             return client.GetStream();
@@ -332,8 +380,8 @@ public class CommTcpServer:AComm
         {
             _sem.Release();
         }
- 
-    } 
+
+    }
     
     public override string Trigger()
     {

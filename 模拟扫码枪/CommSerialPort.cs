@@ -7,11 +7,13 @@ namespace 模拟扫码枪;
 
 public class CommSerialPort:AComm
 {
-    private SerialPort? _sp = null; 
-    
+    private SerialPort? _sp = null;
+    // 保护 _sp 的读写：工作循环、发送线程、释放流程会并发访问同一句柄
+    private readonly object _spLock = new();
+
     public CommSerialPort()
-    { 
-        _ = Task.Run(DoWork);//被动接收和仅接受模式 
+    {
+        _ = Task.Run(DoWork);//被动接收和仅接受模式
     }
 
     private async Task DoWork()
@@ -19,23 +21,25 @@ public class CommSerialPort:AComm
         while (!IsDisposed)
         {
             await Task.Delay(10);//间隔10毫秒
+            if (IsDisposed) break;
             if (!IsEnabled)
             {
                 await Task.Delay(500);
-                _sp?.Dispose();
-                _sp = null;
-                SetIsConnected(false);
+                Close();
                 continue;
             }
             else
             {
                 if (_sp is null)
                 {
-                    _sp = new SerialPort(SerialPortName, SerialPortBaudRate, SerialPortParity, SerialPortDataBits,
-                        SerialPortStopBits);
-                    _sp.ReadTimeout = ReadTimeOut;
-                    _sp.WriteTimeout = WriteTimeOut;
-                    _sp.Open();
+                    // 打开串口可能失败（端口被占用/不存在/参数非法）。
+                    // 这里必须自己捕获并重试，否则异常会冲出 while 循环，
+                    // 导致整个工作线程永久退出，模拟器再也无法工作且无任何提示。
+                    if (!TryOpenSerialPort())
+                    {
+                        await Task.Delay(2000);//失败后退避 2 秒再重试
+                        continue;
+                    }
                     SetIsConnected(true);
                     await Task.Delay(1000);//等待1秒
                 }
@@ -107,8 +111,11 @@ public class CommSerialPort:AComm
         try
         {
             SetIsConnected(false);
-            _sp?.Dispose();
-            _sp = null;
+            lock (_spLock)
+            {
+                _sp?.Dispose();
+                _sp = null;
+            }
         }
         catch (Exception ex)
         {
@@ -116,17 +123,74 @@ public class CommSerialPort:AComm
         }
     }
 
-    SerialPort GetSerialPort()
-    { 
-        if (_sp is null)
+    /// <summary>
+    /// 尝试打开串口。成功返回 true；失败时上报异常并返回 false，由调用方退避后重试。
+    /// </summary>
+    private bool TryOpenSerialPort()
+    {
+        SerialPort? sp = null;
+        try
         {
-            _sp = new SerialPort(SerialPortName, SerialPortBaudRate, SerialPortParity,SerialPortDataBits, SerialPortStopBits);
-            _sp.ReadTimeout = ReadTimeOut;
-            _sp.WriteTimeout = WriteTimeOut;
-            _sp.Open();
+            sp = new SerialPort(SerialPortName, SerialPortBaudRate, SerialPortParity, SerialPortDataBits,
+                SerialPortStopBits);
+            sp.ReadTimeout = ReadTimeOut;
+            sp.WriteTimeout = WriteTimeOut;
+            sp.Open();
+            lock (_spLock)
+            {
+                if (IsDisposed)
+                {
+                    // 释放流程与打开流程并发，直接丢弃刚打开的句柄
+                    sp.Dispose();
+                    return false;
+                }
+                _sp = sp;
+            }
+            return true;
         }
-        return _sp;
-    } 
+        catch (Exception ex)
+        {
+            try { sp?.Dispose(); } catch { /*忽略*/ }
+            lock (_spLock) { _sp = null; }
+            UpdateException($"打开串口 [{SerialPortName}] 失败：{ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>释放串口句柄</summary>
+    protected override void ReleaseResources()
+    {
+        try
+        {
+            lock (_spLock)
+            {
+                _sp?.Dispose();
+                _sp = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("释放串口失败:" + ex.Message);
+        }
+    }
+
+    SerialPort GetSerialPort()
+    {
+        lock (_spLock)
+        {
+            if (_sp is null)
+            {
+                // 打开失败时抛出，由调用方（已有 try/catch）处理，
+                // 不能让异常逃逸出工作循环导致整个模拟器永久失效。
+                var sp = new SerialPort(SerialPortName, SerialPortBaudRate, SerialPortParity, SerialPortDataBits, SerialPortStopBits);
+                sp.ReadTimeout = ReadTimeOut;
+                sp.WriteTimeout = WriteTimeOut;
+                sp.Open();
+                _sp = sp;
+            }
+            return _sp;
+        }
+    }
     
     public override string Trigger()
     {

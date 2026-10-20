@@ -1,13 +1,77 @@
-# 🆕 My Project
+# 模拟扫码枪 (Barcode Scanner Simulator)
 
-## ❓ What is My Project?
+用于模拟各类扫码枪的桌面工具。支持串口、TCP 客户端、TCP 服务端三种接口，
+可配置工作模式、附加内容、结束符、触发/取消内容等参数，并实时输出运行日志。
 
-## ⚡ Getting Started
+## ✨ 功能特性
 
-## 🔧 Building and Running
+| 分类 | 说明 |
+| --- | --- |
+| 接口类型 | 串口 / TCP 客户端 / TCP 服务端 |
+| 工作模式 | 主动触发 / 被动接收 / 仅发送 / 仅接收 |
+| 内容类型 | 文本 / HEX 十六进制 |
+| 附加内容 | 不附加 / 随机数 / 序列号 / 解析发送内容并附加 |
+| 结束符 | 无 / CR / LF / CRLF |
+| 配置持久化 | 自动保存到 `setting.json`，下次启动自动恢复 |
 
-### 🔨 Build the Project
+## 🖥️ 界面结构
 
-### ▶ Running and Settings
+```
+┌──────────────────────────────────────────────────────────┐
+│ 模拟扫码枪              [增加] [删除] [保存配置]        │
+├───────────────┬──────────────────────────────────────────┤
+│ 模拟器列表     │  属性 / 运行日志                        │
+│ ┌───────────┐ │  ┌────────────────────────────────────┐  │
+│ │ ● 名称 串口 │ │  │ 基础设置                            │  │
+│ │   被动接收  │ │  │ 接口配置                            │  │
+│ │        [开] │ │  │ 工作模式                            │  │
+│ └───────────┘ │  └────────────────────────────────────┘  │
+├───────────────┴──────────────────────────────────────────┤
+│ 当前：xxx  |  共 N 个模拟器      配置自动保存于 setting.json │
+└──────────────────────────────────────────────────────────┘
+```
 
-## 🤝 Collaborate with My Project
+- **模拟器列表**：卡片式展示，绿色圆点表示已连接，开关可直接启停。
+- **属性页**：按「基础设置 / 接口配置 / 工作模式」分组，字段按接口类型与工作模式动态显隐。
+- **运行日志**：按级别（普通/成功/警告/错误）着色，支持自动滚动与一键清空。
+
+## 🔧 构建与运行
+
+```bash
+dotnet build 模拟扫码枪/模拟扫码枪.csproj
+dotnet run   --project 模拟扫码枪/模拟扫码枪.csproj
+```
+
+> 目标框架：`net6.0-windows`，依赖 `CommunityToolkit.Mvvm`、`Newtonsoft.Json`、`System.IO.Ports`。
+
+## 🧪 验证工具
+
+`tools/UiRenderTest` 提供离屏渲染与功能回归测试：
+
+```bash
+cd tools/UiRenderTest
+dotnet run -- render ./out     # 离屏渲染窗口并输出 PNG
+dotnet run -- test             # 运行 30 项功能回归测试
+```
+
+## 📁 目录结构
+
+```
+模拟扫码枪/
+├── App.xaml                 应用级资源（合并主题字典）
+├── MainWindow.xaml          主界面布局
+├── MainWindowViewModel.cs   视图模型（配置读写、日志）
+├── CommBase.cs              IComm 接口 / AComm 基类 / ScannerWrap
+├── CommSerialPort.cs        串口实现
+├── CommTcpClient.cs         TCP 客户端实现
+├── CommTcpServer.cs         TCP 服务端实现
+├── Themes/
+│   ├── Palette.xaml         配色、字体、尺寸
+│   └── Controls.xaml        控件模板与样式
+├── Converters/              绑定转换器
+└── Models/                  日志模型
+```
+
+## 📝 License
+
+[MIT](LICENSE)

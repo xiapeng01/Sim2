@@ -5,439 +5,636 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:模拟扫码枪"
-        Closing="Window_Closing"
         mc:Ignorable="d"
-        Title="模拟扫码枪-Mica App" Height="600" Width="800">
+        Title="模拟扫码枪"
+        Height="720" Width="1180" MinHeight="480" MinWidth="900"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource AppBackgroundBrush}"
+        FontFamily="{StaticResource AppFontFamily}"
+        FontSize="{StaticResource FontSizeBody}"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True">
+
     <Window.DataContext>
         <local:MainWindowViewModel/>
     </Window.DataContext>
+
     <Window.Resources>
         <local:BoolReverseConverter x:Key="cvtReverse"/>
-        <Style TargetType="TextBox" >
-            <Setter Property="Padding" Value="3"/>
-        </Style>
-        <DataTemplate x:Key="DtScanner" DataType="{x:Type local:IComm}">
-            <StackPanel>
-                <StackPanel.Resources>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="MinWidth" Value="80"/>
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                    </Style>
-                    <Style TargetType="CheckBox">
-                        <Setter Property="VerticalAlignment" Value="Center"></Setter>
-                        <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-                    </Style>
-                </StackPanel.Resources>
-                <!--开关-->
-                <DockPanel>
-                    <TextBlock Text="开关"></TextBlock>
-                    <Border DockPanel.Dock="Right" Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center" >
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Red"></Setter>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsConnected}" Value="true">
-                                        <Setter Property="Background" Value="Green"></Setter>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
-                    <UniformGrid  Columns="3">
-                        <CheckBox Content="启用" IsChecked="{Binding IsEnabled}"></CheckBox>
-                        <CheckBox Content="校验触发内容" IsChecked="{Binding IsVerifyTriggerContent}"></CheckBox>
-                        <TextBox Text="{Binding ClientCount}" ></TextBox>
-                    </UniformGrid>
-                </DockPanel>
-                
-                <!--开关-->
-                <DockPanel>
-                    <TextBlock Text="接口类型"></TextBlock> 
-                    <ComboBox ItemsSource="{Binding InterfaceTypeValues}" SelectedItem="{Binding InterfaceType}"></ComboBox>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="Tcp参数"/>
-                    <UniformGrid  Columns="2">
-                        <TextBox Text="{Binding TcpIP}"/>
-                        <TextBox Text="{Binding TcpPort}"/>
-                    </UniformGrid>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="SerialPort参数"/>
-                    <UniformGrid Columns="2">
-                        <ComboBox ItemsSource="{Binding SerialPortNameValues}" SelectedItem="{Binding SerialPortName}"/>
-                        <TextBox Text="{Binding SerialPortBaudRate}"/>
-                    </UniformGrid>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="SerialPort参数"/>
-                    <UniformGrid Columns="3">
-                        <TextBox Text="{Binding SerialPortDataBits}"/>
-                        <ComboBox ItemsSource="{Binding ParityValues}" SelectedItem="{Binding SerialPortParity}"/>
-                        <ComboBox ItemsSource="{Binding StopBitsValues}" SelectedItem="{Binding SerialPortStopBits}"/>
-                    </UniformGrid>
-                </DockPanel>
+        <local:EnumDescriptionConverter x:Key="cvtEnumDesc"/>
+        <local:EnumToVisibilityConverter x:Key="cvtEnumVis"/>
+        <local:BoolToVisibilityConverter x:Key="cvtBoolVis"/>
+        <local:NullToVisibilityConverter x:Key="cvtNullVis"/>
+        <local:IntToVisibilityConverter x:Key="cvtIntVis"/>
 
-                <DockPanel>
-                    <TextBlock Text="工作模式"></TextBlock>                     
-                    <ComboBox ItemsSource="{Binding WorkModelTypes}" SelectedItem="{Binding WorkModel}"></ComboBox>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="附加内容"></TextBlock> 
-                    <TextBox Text="{Binding AppendContentLength}" DockPanel.Dock="Right" MinWidth="30"/>
-                    <ComboBox ItemsSource="{Binding AppendContentValues}" SelectedItem="{Binding AppendContent}"></ComboBox>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="附加结束符"></TextBlock> 
-                    <ComboBox ItemsSource="{Binding EndOfFramesValues}" SelectedItem="{Binding EndOfFrame}"></ComboBox>
-                </DockPanel>  
-                
-                <!--发送内容-->
-                <DockPanel>
-                    <TextBlock Text="发送内容类型"></TextBlock> 
-                    <ComboBox ItemsSource="{Binding ContentTypesValues}" SelectedItem="{Binding SendContentType}"/>
-                </DockPanel>  
-                <DockPanel>
-                    <TextBlock Text="发送内容"></TextBlock> 
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                        <TextBox Text="{Binding SendInterval}" MinWidth="30"/>
-                        <Button Content="Send" Command="{Binding SendCommand}"></Button>
-                    </StackPanel>
-                    <TextBox Text="{Binding SendContent}"/> 
-                </DockPanel>  
-                <DockPanel>
-                    <TextBlock Text="触发内容"></TextBlock> 
-                    <TextBox Text="{Binding TriggerContent}"/> 
-                </DockPanel>  
-                <DockPanel>
-                    <TextBlock Text="取消内容"></TextBlock> 
-                    <TextBox Text="{Binding CancelContent}"/> 
-                </DockPanel>  
-                
-                <!--接收内容-->
-                <DockPanel>
-                    <TextBlock Text="接收内容类型"></TextBlock> 
-                    <ComboBox ItemsSource="{Binding ContentTypesValues}" SelectedItem="{Binding ReceiveContentType}"/>
-                </DockPanel>  
-                <DockPanel>
-                    <TextBlock Text="接收内容"></TextBlock> 
-                    <TextBox Text="{Binding ReceiveContent}"/> 
-                </DockPanel>  
-                
-            </StackPanel>
+        <!-- 枚举下拉项的中文显示模板 -->
+        <DataTemplate x:Key="DtEnumItem">
+            <TextBlock Text="{Binding Converter={StaticResource cvtEnumDesc}}"/>
         </DataTemplate>
-        <DataTemplate x:Key="DtScannerWrap" DataType="{x:Type local:ScannerWrap}">
-            <StackPanel>
-                <StackPanel.Resources>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="MinWidth" Value="80"/>
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                    </Style>
-                    <Style TargetType="CheckBox">
-                        <Setter Property="VerticalAlignment" Value="Center"></Setter>
-                        <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-                    </Style>
-                    <Style TargetType="DockPanel">
-                        <Setter Property="Margin" Value="3"/>
-                    </Style>
-                </StackPanel.Resources>
-                <!--开关-->
-                <DockPanel>
-                    <TextBlock Text="开关"></TextBlock>
-                    <Border DockPanel.Dock="Right" Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Center" >
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Red"></Setter>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="true">
-                                        <Setter Property="Background" Value="Green"></Setter>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
-                    <UniformGrid  Columns="3">
-                        <CheckBox Content="启用" IsChecked="{Binding Scanner.IsEnabled}"></CheckBox>
-                        <CheckBox Content="校验触发内容" IsChecked="{Binding Scanner.IsVerifyTriggerContent}"></CheckBox>
-                        <TextBox Text="{Binding Scanner.ClientCount}" Margin="5,0"/>
-                    </UniformGrid>
-                    
-                </DockPanel>
-                <!--名称-->
-                <DockPanel>
-                    <TextBlock Text="名称"/>
-                    <TextBox Text="{Binding Scanner.Name}"/>
-                </DockPanel>
-                <!--开关-->
-                <DockPanel IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
-                    <TextBlock Text="接口类型"></TextBlock> 
-                    <ComboBox ItemsSource="{Binding Scanner.InterfaceTypeValues}" SelectedItem="{Binding InterfaceType}"></ComboBox>
-                </DockPanel>
 
-                <DockPanel Margin="3" IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding InterfaceType}" Value="TcpClient">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding InterfaceType}" Value="TcpServer">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
-                    <TextBlock Text="Tcp参数"/>
-                    <UniformGrid  Columns="2">
-                        <TextBox Text="{Binding Scanner.TcpIP}"/>
-                        <TextBox Text="{Binding Scanner.TcpPort}"/>
-                    </UniformGrid>
-                </DockPanel>
-                <DockPanel Margin="3" IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding InterfaceType}" Value="SerialPort">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger> 
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
-                    <TextBlock Text="SerialPort参数"/>
-                    <UniformGrid Columns="2">
-                        <ComboBox ItemsSource="{Binding Scanner.SerialPortNameValues}" SelectedItem="{Binding Scanner.SerialPortName}"/>
-                        <ComboBox SelectedItem="{Binding Scanner.SerialPortBaudRate}">
-                            <sys:Int32>4800</sys:Int32>
-                            <sys:Int32>9600</sys:Int32>
-                            <sys:Int32>19200</sys:Int32>
-                            <sys:Int32>38400</sys:Int32>
-                            <sys:Int32>115200</sys:Int32>
-                            <sys:Int32>230400</sys:Int32>
-                        </ComboBox>
-                    </UniformGrid>
-                </DockPanel>
-                <DockPanel Margin="3" IsEnabled="{Binding Scanner.IsEnabled,Converter={StaticResource cvtReverse}}">
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding InterfaceType}" Value="SerialPort">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
-                    <TextBlock Text="SerialPort参数"/>
-                    <UniformGrid Columns="3">
-                        <ComboBox SelectedItem="{Binding Scanner.SerialPortDataBits}">
-                            <sys:Int32>7</sys:Int32>
-                            <sys:Int32>8</sys:Int32>
-                        </ComboBox>
-                        <ComboBox ItemsSource="{Binding Scanner.ParityValues}" SelectedItem="{Binding Scanner.SerialPortParity}"/>
-                        <ComboBox ItemsSource="{Binding Scanner.StopBitsValues}" SelectedItem="{Binding Scanner.SerialPortStopBits}"/>
-                    </UniformGrid>
-                </DockPanel>
+        <!-- 字段标签 -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
 
-                <DockPanel>
-                    <TextBlock Text="工作模式"></TextBlock>                     
-                    <ComboBox ItemsSource="{Binding Scanner.WorkModelTypes}" SelectedItem="{Binding Scanner.WorkModel}"></ComboBox>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="附加内容"></TextBlock> 
-                    <TextBox Text="{Binding Scanner.AppendContentLength}" DockPanel.Dock="Right" MinWidth="30"/>
-                    <ComboBox ItemsSource="{Binding Scanner.AppendContentValues}" SelectedItem="{Binding Scanner.AppendContent}"></ComboBox>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="附加结束符"></TextBlock> 
-                    <ComboBox ItemsSource="{Binding Scanner.EndOfFramesValues}" SelectedItem="{Binding Scanner.EndOfFrame}"></ComboBox>
-                </DockPanel>  
-                
-                <!--发送内容-->
-                <DockPanel Margin="3">
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlyReceive">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
+        <!-- 分组卡片 -->
+        <Style x:Key="SectionCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
 
-                    <TextBlock Text="发送内容类型"></TextBlock> 
-                    <ComboBox ItemsSource="{Binding Scanner.ContentTypesValues}" SelectedItem="{Binding Scanner.SendContentType}"/>
-                </DockPanel>
-                <DockPanel Margin="3">
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlyReceive">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="Passive">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
-                    <TextBlock Text="发送内容"></TextBlock> 
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                        <TextBox Text="{Binding Scanner.SendInterval}" MinWidth="30"/>
-                        <Button Content="Send" Command="{Binding Scanner.SendCommand}"></Button>
+        <!-- 分组标题 -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <!-- 状态圆点 -->
+        <Style x:Key="StatusDot" TargetType="Ellipse">
+            <Setter Property="Width" Value="9"/>
+            <Setter Property="Height" Value="9"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Fill" Value="{StaticResource StatusOfflineBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="True">
+                    <Setter Property="Fill" Value="{StaticResource StatusOnlineBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 列表项：模拟器卡片 -->
+        <DataTemplate x:Key="DtScannerCard" DataType="{x:Type local:ScannerWrap}">
+            <Border x:Name="Card"
+                    CornerRadius="8"
+                    Padding="12,10"
+                    Margin="0,0,0,8">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentBorderBrush}"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                <Setter Property="Background" Value="{StaticResource AccentSubtleBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 状态点 + 名称 -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <Ellipse Style="{StaticResource StatusDot}" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding Scanner.Name}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   MaxWidth="150"
+                                   TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
-                    <TextBox Text="{Binding Scanner.SendContent}"/> 
-                </DockPanel>
-                <DockPanel Margin="3">
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="Passive">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger> 
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
-                    <TextBlock Text="触发内容" />
-                    <Button Content="Send" Command="{Binding Scanner.SendCommand}" DockPanel.Dock="Right" />
-                    <TextBox Text="{Binding Scanner.TriggerContent}"/> 
-                </DockPanel>
-                <DockPanel Margin="3">
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlyReceive">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
-                    
-                    <TextBlock Text="取消内容"></TextBlock>
-                    <Button Content="Cancel" DockPanel.Dock="Right" Command="{Binding Scanner.CancelCommand}"/>
-                    <TextBox Text="{Binding Scanner.CancelContent}"/> 
-                </DockPanel>  
-                
-                <!--接收内容-->
-                <DockPanel Margin="3">
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlySend">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
-                    <TextBlock Text="接收内容类型"></TextBlock> 
-                    <ComboBox ItemsSource="{Binding Scanner.ContentTypesValues}" SelectedItem="{Binding Scanner.ReceiveContentType}"/>
-                </DockPanel>
-                <DockPanel  Margin="3" >
-                    <DockPanel.Style>
-                        <Style TargetType="DockPanel">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Scanner.WorkModel}" Value="OnlySend">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DockPanel.Style>
-                    <TextBlock Text="接收内容"></TextBlock> 
-                    <TextBox Text="{Binding Scanner.ReceiveContent}"/> 
-                </DockPanel>  
-                
+
+                    <!-- 接口 / 模式 -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource SurfaceSunkenBrush}"
+                                CornerRadius="4" Padding="7,2" Margin="0,0,6,0">
+                            <TextBlock Text="{Binding Scanner.InterfaceType, Converter={StaticResource cvtEnumDesc}}"
+                                       FontSize="11.5"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </Border>
+                        <Border Background="{StaticResource SurfaceSunkenBrush}"
+                                CornerRadius="4" Padding="7,2">
+                            <TextBlock Text="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumDesc}}"
+                                       FontSize="11.5"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- 启用开关 -->
+                    <CheckBox Grid.Column="2"
+                              Style="{StaticResource AppSwitch}"
+                              IsChecked="{Binding Scanner.IsEnabled, Mode=TwoWay}"
+                              ToolTip="启用后开始监听/连接"
+                              VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- 属性面板：模拟器配置 -->
+        <DataTemplate x:Key="DtScannerProps" DataType="{x:Type local:ScannerWrap}">
+            <StackPanel>
+                <!-- 基础 -->
+                <Border Style="{StaticResource SectionCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="基础设置"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="名称"/>
+                            <TextBox Grid.Column="1" Style="{StaticResource AppTextBox}"
+                                     Text="{Binding Scanner.Name, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="启用"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <CheckBox Style="{StaticResource AppSwitch}"
+                                          IsChecked="{Binding Scanner.IsEnabled, Mode=TwoWay}"/>
+                                <TextBlock Text="启用后开始监听/连接"
+                                           Margin="10,0,0,0"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="校验触发内容"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <CheckBox Style="{StaticResource AppSwitch}"
+                                          IsChecked="{Binding Scanner.IsVerifyTriggerContent, Mode=TwoWay}"/>
+                                <TextBlock Text="仅被动模式下生效"
+                                           Margin="10,0,0,0"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 接口 -->
+                <Border Style="{StaticResource SectionCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="接口配置"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="接口类型"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource AppComboBox}"
+                                      ItemTemplate="{StaticResource DtEnumItem}"
+                                      ItemsSource="{Binding Scanner.InterfaceTypeValues}"
+                                      SelectedItem="{Binding InterfaceType, Mode=TwoWay}"/>
+                        </Grid>
+
+                        <!-- TCP 参数 -->
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding InterfaceType, Converter={StaticResource cvtEnumVis}, ConverterParameter='TcpClient,TcpServer'}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="IP / 端口"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <TextBox Style="{StaticResource AppTextBox}"
+                                         Width="150"
+                                         Text="{Binding Scanner.TcpIP, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Style="{StaticResource AppTextBox}"
+                                         Width="90"
+                                         Margin="8,0,0,0"
+                                         Text="{Binding Scanner.TcpPort, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 串口参数 -->
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding InterfaceType, Converter={StaticResource cvtEnumVis}, ConverterParameter=SerialPort}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="串口"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource AppComboBox}"
+                                      ItemsSource="{Binding Scanner.SerialPortNameValues}"
+                                      SelectedItem="{Binding Scanner.SerialPortName, Mode=TwoWay}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding InterfaceType, Converter={StaticResource cvtEnumVis}, ConverterParameter=SerialPort}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="波特率"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource AppComboBox}" Margin="0,0,8,0"
+                                      ItemsSource="{Binding Scanner.SerialPortBaudRateValues}"
+                                      SelectedItem="{Binding Scanner.SerialPortBaudRate, Mode=TwoWay}"/>
+                            <ComboBox Grid.Column="2" Style="{StaticResource AppComboBox}"
+                                      ItemsSource="{Binding Scanner.ParityValues}"
+                                      SelectedItem="{Binding Scanner.SerialPortParity, Mode=TwoWay}"/>
+                        </Grid>
+                        <Grid Visibility="{Binding InterfaceType, Converter={StaticResource cvtEnumVis}, ConverterParameter=SerialPort}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="数据位/停止位"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource AppComboBox}" Margin="0,0,8,0"
+                                      ItemsSource="{Binding Scanner.SerialPortDataBitsValues}"
+                                      SelectedItem="{Binding Scanner.SerialPortDataBits, Mode=TwoWay}"/>
+                            <ComboBox Grid.Column="2" Style="{StaticResource AppComboBox}"
+                                      ItemsSource="{Binding Scanner.StopBitsValues}"
+                                      SelectedItem="{Binding Scanner.SerialPortStopBits, Mode=TwoWay}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 工作模式与内容 -->
+                <Border Style="{StaticResource SectionCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="工作模式"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="工作模式"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource AppComboBox}"
+                                      ItemTemplate="{StaticResource DtEnumItem}"
+                                      ItemsSource="{Binding Scanner.WorkModelTypes}"
+                                      SelectedItem="{Binding Scanner.WorkModel, Mode=TwoWay}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter=!OnlyReceive}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="发送类型"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource AppComboBox}"
+                                      ItemTemplate="{StaticResource DtEnumItem}"
+                                      ItemsSource="{Binding Scanner.ContentTypesValues}"
+                                      SelectedItem="{Binding Scanner.SendContentType, Mode=TwoWay}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter=!OnlyReceive}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="发送内容"/>
+                            <TextBox Grid.Column="1" Style="{StaticResource AppTextBox}"
+                                     FontFamily="{StaticResource MonoFontFamily}"
+                                     Text="{Binding Scanner.SendContent, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter='Trigger,OnlySend'}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="发送间隔"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <TextBox Style="{StaticResource AppTextBox}" Width="110"
+                                         Text="{Binding Scanner.SendInterval, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Text="毫秒（0 表示只发送一次）"
+                                           Margin="10,0,0,0"
+                                           FontSize="12"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter=!OnlyReceive}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="附加内容"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <ComboBox Style="{StaticResource AppComboBox}" MinWidth="150"
+                                          ItemTemplate="{StaticResource DtEnumItem}"
+                                          ItemsSource="{Binding Scanner.AppendContentValues}"
+                                          SelectedItem="{Binding Scanner.AppendContent, Mode=TwoWay}"/>
+                                <TextBox Style="{StaticResource AppTextBox}" Width="80" Margin="8,0,0,0"
+                                         Text="{Binding Scanner.AppendContentLength, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter=!OnlyReceive}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="结束符"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource AppComboBox}"
+                                      ItemTemplate="{StaticResource DtEnumItem}"
+                                      ItemsSource="{Binding Scanner.EndOfFramesValues}"
+                                      SelectedItem="{Binding Scanner.EndOfFrame, Mode=TwoWay}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter=!OnlySend}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="接收类型"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource AppComboBox}"
+                                      ItemTemplate="{StaticResource DtEnumItem}"
+                                      ItemsSource="{Binding Scanner.ContentTypesValues}"
+                                      SelectedItem="{Binding Scanner.ReceiveContentType, Mode=TwoWay}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter=!OnlySend}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="接收内容"/>
+                            <TextBox Grid.Column="1" Style="{StaticResource AppTextBox}"
+                                     FontFamily="{StaticResource MonoFontFamily}"
+                                     Text="{Binding Scanner.ReceiveContent, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter=Passive}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="触发内容"/>
+                            <TextBox Grid.Column="1" Style="{StaticResource AppTextBox}"
+                                     FontFamily="{StaticResource MonoFontFamily}"
+                                     Text="{Binding Scanner.TriggerContent, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,12"
+                              Visibility="{Binding Scanner.WorkModel, Converter={StaticResource cvtEnumVis}, ConverterParameter=!OnlyReceive}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}" Text="取消内容"/>
+                            <TextBox Grid.Column="1" Style="{StaticResource AppTextBox}"
+                                     FontFamily="{StaticResource MonoFontFamily}"
+                                     Text="{Binding Scanner.CancelContent, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
+
+                        <!-- 操作按钮 -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource AppButtonDanger}" Content="取消发送"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding Scanner.CancelCommand}"/>
+                            <Button Style="{StaticResource AppButtonPrimary}" Content="发送"
+                                    Command="{Binding Scanner.SendCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
-    <Grid>
-        <DockPanel  >
-            <UniformGrid Columns="2">
-                <DockPanel>
-                    <UniformGrid Rows="1" DockPanel.Dock="Bottom" Margin="5">
-                        <UniformGrid.Resources>
-                            <Style TargetType="Button" >
-                                <Setter Property="Margin" Value="3"/>
-                                <Setter Property="Padding" Value="5"/>
-                                <d:Setter Property="MinHeight" Value="35"/>
-                                <Setter Property="FontSize" Value="18"/>
-                            </Style>
-                        </UniformGrid.Resources>
-                        <Button Content="增加" Command="{Binding AddItemCommand}" Foreground="Green" FontWeight="Bold"/>
-                        <Button Content="删除" Command="{Binding RemoveItemCommand}" Foreground="Red" FontWeight="Bold"/>
-                        <Button Content="保存" Command="{Binding SaveAllItemsCommand}" Foreground="Blue" FontWeight="Bold"/>
-                    </UniformGrid>
-                    <ListBox ItemsSource="{Binding ScannerList}" SelectedItem="{Binding Scanner}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate DataType="local:ScannerWrap">
-                                <Border Padding="8" CornerRadius="5" BorderThickness="2" d:BorderBrush="Gray">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="BorderBrush" Value="Red"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="True">
-                                                    <Setter Property="BorderBrush" Value="Green"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <DockPanel HorizontalAlignment="Stretch" >
-                                        <d:Border Height="15" Width="15" VerticalAlignment="Center" >
-                                            <d:Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="Red"></Setter>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Scanner.IsConnected}" Value="true">
-                                                            <Setter Property="Background" Value="Green"></Setter>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </d:Border.Style>
-                                        </d:Border>
-                                        <Button Content="Send" Command="{Binding Scanner.SendCommand}" DockPanel.Dock="Right" Padding="5"/>
-                                        <CheckBox IsChecked="{Binding Scanner.IsEnabled}" VerticalAlignment="Center" Margin="5"/>
-                                        <TextBox IsReadOnly="True" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="3" Text="{Binding Scanner.ClientCount}" />
-                                        <TextBox Text="{Binding InterfaceType}" Padding="3" VerticalAlignment="Stretch" VerticalContentAlignment="Center"/>
-                                        <TextBox Text="{Binding Scanner.Name}" MinWidth="80" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
-                                        <UniformGrid Columns="1" >
-                                            <TextBox Text="{Binding Scanner.SendContent}" />
-                                            <TextBox Text="{Binding Scanner.ReceiveContent}"  />
-                                        </UniformGrid>
 
-                                    </DockPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Add" Command="{Binding AddItemCommand}"></MenuItem>
-                                <MenuItem Header="Del" Command="{Binding RemoveItemCommand}"></MenuItem>
-                            </ContextMenu>
-                        </ListBox.ContextMenu>
-                    </ListBox>
-                </DockPanel>
-                <TabControl>
-                    <TabItem Header="属性">
-                        <Label Content="{Binding Scanner}" ContentTemplate="{StaticResource DtScannerWrap}"></Label>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== 顶部标题栏 ===== -->
+        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,0,0,1">
+            <Grid Margin="18,0,18,0" Height="52">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 标题 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="26" Height="26" CornerRadius="6" Background="{StaticResource AccentBrush}" Margin="0,0,10,0">
+                        <Path Data="M 2,2 L 2,14 M 6,2 L 6,14 M 10,2 L 10,14 M 14,2 L 14,14"
+                              Stroke="White" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="模拟扫码枪" FontSize="15" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="扫码枪模拟器" FontSize="12" Margin="10,1,0,0"
+                               Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- 全局操作 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource AppButton}" Content="增加" Margin="0,0,8,0"
+                            Command="{Binding AddItemCommand}" ToolTip="新增一个模拟器"/>
+                    <Button Style="{StaticResource AppButton}" Content="删除" Margin="0,0,8,0"
+                            Command="{Binding RemoveItemCommand}" ToolTip="删除选中的模拟器"/>
+                    <Button Style="{StaticResource AppButtonPrimary}" Content="保存配置"
+                            Command="{Binding SaveAllItemsCommand}" ToolTip="保存到 setting.json"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== 主内容区 ===== -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330" MinWidth="260"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左侧：模拟器列表 -->
+            <Grid Grid.Column="0" Margin="14,14,0,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock Text="模拟器列表" FontWeight="SemiBold" FontSize="13.5"
+                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ScannerCount, StringFormat='共 {0} 个'}"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                </Grid>
+
+                <ListBox Grid.Row="1"
+                         Style="{StaticResource AppListBox}"
+                         ItemContainerStyle="{StaticResource AppListBoxItem}"
+                         ItemTemplate="{StaticResource DtScannerCard}"
+                         ItemsSource="{Binding ScannerList}"
+                         SelectedItem="{Binding Scanner}">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="增加" Command="{Binding AddItemCommand}"/>
+                            <MenuItem Header="删除" Command="{Binding RemoveItemCommand}"/>
+                            <Separator/>
+                            <MenuItem Header="保存配置" Command="{Binding SaveAllItemsCommand}"/>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
+
+                <!-- 列表为空时的占位 -->
+                <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Visibility="{Binding ScannerCount, Converter={StaticResource cvtIntVis}, ConverterParameter=Zero}">
+                    <TextBlock Text="暂无模拟器" HorizontalAlignment="Center"
+                               Foreground="{StaticResource TextMutedBrush}" FontSize="13"/>
+                    <TextBlock Text="点击右上角「增加」创建" Margin="0,6,0,0" HorizontalAlignment="Center"
+                               Foreground="{StaticResource TextMutedBrush}" FontSize="12" Opacity="0.8"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- 分隔条 -->
+            <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                          Background="Transparent" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns"
+                          Focusable="False"/>
+
+            <!-- 右侧：属性 / 日志 -->
+            <Grid Grid.Column="2" Margin="8,14,14,14">
+                <TabControl Style="{StaticResource AppTabControl}">
+
+                    <!-- 属性 -->
+                    <TabItem Header="属性" Style="{StaticResource AppTabItem}">
+                        <Grid>
+                            <!-- 有选中项 -->
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="2,14,4,0"
+                                          Visibility="{Binding Scanner, Converter={StaticResource cvtNullVis}, ConverterParameter=Inverse}">
+                                <ContentControl Content="{Binding Scanner}" ContentTemplate="{StaticResource DtScannerProps}"/>
+                            </ScrollViewer>
+
+                            <!-- 空状态 -->
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                        Visibility="{Binding Scanner, Converter={StaticResource cvtNullVis}}">
+                                <Path Data="M 3,3 L 3,21 M 9,3 L 9,21 M 15,3 L 15,21 M 21,3 L 21,21"
+                                      Stroke="{StaticResource BorderStrongBrush}" StrokeThickness="2"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.5"
+                                      Width="24" Height="24" Stretch="Uniform"/>
+                                <TextBlock Text="请先在左侧选择一个模拟器" Margin="0,14,0,0"
+                                           Foreground="{StaticResource TextMutedBrush}" FontSize="13"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
                     </TabItem>
-                    <TabItem Header="消息">
-                        <TextBox Text="{Binding Message}" MouseDoubleClick="TextBox_MouseDoubleClick"/>
+
+                    <!-- 运行日志 -->
+                    <TabItem Header="运行日志" Style="{StaticResource AppTabItem}">
+                        <Grid Margin="0,12,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="2,0,0,10">
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox Style="{StaticResource AppCheckBox}" Content="自动滚动"
+                                              IsChecked="{Binding AutoScroll, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button Style="{StaticResource AppButtonSmall}" Content="清空日志"
+                                        HorizontalAlignment="Right" Command="{Binding ClearLogsCommand}"/>
+                            </Grid>
+
+                            <ListBox Grid.Row="1" x:Name="LogList" Style="{StaticResource AppListBox}"
+                                     Background="{StaticResource SurfaceBrush}"
+                                     BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1"
+                                     ItemsSource="{Binding Logs}"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type local:LogEntry}">
+                                        <Grid Margin="0,1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding TimeText}"
+                                                       FontFamily="{StaticResource MonoFontFamily}"
+                                                       FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                                       VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <Border Grid.Column="1" CornerRadius="3" Padding="6,1" Margin="0,0,10,0"
+                                                    VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{StaticResource SurfaceSunkenBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Level}" Value="Success">
+                                                                <Setter Property="Background" Value="{StaticResource SuccessSubtleBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                                                <Setter Property="Background" Value="{StaticResource WarningSubtleBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Level}" Value="Error">
+                                                                <Setter Property="Background" Value="{StaticResource DangerSubtleBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock x:Name="LevelTag" Text="{Binding Level}"
+                                                           FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="2" Text="{Binding Text}"
+                                                       FontSize="12.5" TextWrapping="Wrap"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding Level}" Value="Error">
+                                                <Setter TargetName="LevelTag" Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Level}" Value="Success">
+                                                <Setter TargetName="LevelTag" Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                                <Setter TargetName="LevelTag" Property="Foreground" Value="{StaticResource WarningBrush}"/>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
                     </TabItem>
                 </TabControl>
+            </Grid>
+        </Grid>
 
-            </UniformGrid>
-        </DockPanel>
-        
+        <!-- ===== 底部状态栏 ===== -->
+        <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="18,0,18,0" Height="30">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="当前："
+                               FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="{Binding Scanner.Scanner.Name}"
+                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="　|　"
+                               FontSize="12" Foreground="{StaticResource BorderStrongBrush}"/>
+                    <TextBlock Text="{Binding ScannerCount, StringFormat='共 {0} 个模拟器'}"
+                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+                <TextBlock Text="配置自动保存于 setting.json" HorizontalAlignment="Right"
+                           VerticalAlignment="Center" FontSize="12"
+                           Foreground="{StaticResource TextMutedBrush}"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

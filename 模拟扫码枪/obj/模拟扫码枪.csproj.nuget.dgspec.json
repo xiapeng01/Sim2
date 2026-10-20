@@ -1,31 +1,27 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj": {}
+    "D:\\project2\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj": {}
   },
   "projects": {
-    "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj": {
+    "D:\\project2\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj",
+        "projectUniqueName": "D:\\project2\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj",
         "projectName": "模拟扫码枪",
-        "projectPath": "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj",
-        "packagesPath": "D:\\LocalCache\\nuget\\packages",
-        "outputPath": "D:\\Project\\模拟扫码枪2\\模拟扫码枪\\obj\\",
+        "projectPath": "D:\\project2\\模拟扫码枪2\\模拟扫码枪\\模拟扫码枪.csproj",
+        "packagesPath": "C:\\Users\\VPC\\.nuget\\packages\\",
+        "outputPath": "D:\\project2\\模拟扫码枪2\\模拟扫码枪\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "D:\\LocalCache\\nuget\\packages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\XiapPeng\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\VPC\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net6.0-windows"
         ],
         "sources": {
-          "D:\\LocalCache\\nuget\\packages": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -45,7 +41,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.300"
+        "SdkAnalysisLevel": "10.0.400"
       },
       "frameworks": {
         "net6.0-windows": {
@@ -84,7 +80,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402\\RuntimeIdentifierGraph.json"
         }
       }
     }
