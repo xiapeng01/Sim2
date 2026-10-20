@@ -16,21 +16,31 @@ internal static class RealConfigCheck
         int fail = 0;
         Console.WriteLine($"\n[5] 真实配置文件 {Path.GetFileName(settingPath)}");
 
-        if (!File.Exists(settingPath))
+        if (string.IsNullOrWhiteSpace(settingPath) || !File.Exists(settingPath))
         {
-            Console.WriteLine("  [SKIP] 未找到 setting.json");
-            return 0;
+            // 未显式指定路径时，自动向上查找仓库中的真实 setting.json。
+            // 之前这里恒为 SKIP —— 调用方传的其实是「输出目录」，不是配置文件路径。
+            settingPath = FindRealSettingFile();
+            if (settingPath is null)
+            {
+                Console.WriteLine("  [SKIP] 未找到 setting.json");
+                return 0;
+            }
+            Console.WriteLine($"  自动定位到 {settingPath}");
         }
 
         var workDir = Path.Combine(Path.GetTempPath(), "扫码枪真实配置");
         Directory.CreateDirectory(workDir);
-        File.Copy(settingPath, Path.Combine(workDir, "setting.json"), true);
+        var localFile = Path.Combine(workDir, "setting.json");
+        File.Copy(settingPath, localFile, true);
 
         var prev = Directory.GetCurrentDirectory();
         Directory.SetCurrentDirectory(workDir);
         try
         {
-            var vm = new MainWindowViewModel();
+            // 显式注入隔离路径：配置文件位置已从「相对当前工作目录」改为固定路径，
+            // 这里指定到临时目录，避免动到 exe 同级的真实配置。
+            var vm = new MainWindowViewModel(localFile);
             Console.WriteLine($"  加载到 {vm.ScannerList.Count} 个模拟器");
 
             foreach (var w in vm.ScannerList)
@@ -59,7 +69,7 @@ internal static class RealConfigCheck
 
             // 重新保存，验证历史脏数据被修正
             vm.SaveSetting();
-            var json = File.ReadAllText(Path.Combine(workDir, "setting.json"));
+            var json = File.ReadAllText(localFile);
             var data = JsonConvert.DeserializeObject<System.Collections.Generic.List<Newtonsoft.Json.Linq.JObject>>(json);
             foreach (var item in data)
             {
@@ -83,5 +93,31 @@ internal static class RealConfigCheck
             Directory.SetCurrentDirectory(prev);
         }
         return fail;
+    }
+
+    /// <summary>
+    /// 从程序集所在目录向上查找仓库根目录下的 setting.json。
+    /// <para>
+    /// 不能用当前工作目录：回归测试会把 CWD 切到临时目录，那里向上找不到仓库。
+    /// </para>
+    /// </summary>
+    private static string? FindRealSettingFile()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            foreach (var name in new[] { "setting.json" })
+            {
+                var p = Path.Combine(dir.FullName, name);
+                if (File.Exists(p)) return p;
+            }
+            foreach (var sub in new[] { Path.Combine("模拟扫码枪", "bin", "Debug", "net6.0-windows") })
+            {
+                var p = Path.Combine(dir.FullName, sub, "setting.json");
+                if (File.Exists(p)) return p;
+            }
+            dir = dir.Parent;
+        }
+        return null;
     }
 }

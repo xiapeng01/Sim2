@@ -52,50 +52,37 @@ public class CommSerialPort:AComm
                     case EnumWorkModel.Passive:
                         var sp1 = GetSerialPort();
                         if (sp1.BytesToRead > 0)
-                        { 
-                            var str = sp1.ReadExisting();//读取所有内容
+                        {
+                            // 用 Read 拿原始字节，而不是 ReadExisting()：
+                            // HEX 模式的触发比对需要原始字节，
+                            // ReadExisting() 返回的是已按编码解码的字符串，字节信息已丢失
+                            var raw = new byte[sp1.BytesToRead];
+                            var readCount = sp1.Read(raw, 0, raw.Length);
+                            var str = Encoding.UTF8.GetString(raw, 0, readCount);
                             UpdateMessage($"收到内容[{str}]");
-                            if (IsVerifyTriggerContent)//通过校验才发送
+                            // 触发匹配统一走基类：HEX 模式用原始字节比较，
+                            // 不能用「解码成字符串再编码回来」（对非 UTF-8 合法字节有损）
+                            if (IsTriggerMatched(raw, str))
                             {
-                                switch (ReceiveContentType)
-                                {
-                                    default:
-                                    case EnumContentType.Text://字符串模式不比较空白字符
-                                        var clearTriggerString = TriggerContent.Trim();
-                                        if (clearTriggerString.Equals(str.Trim()))
-                                        {
-                                            Send();
-                                        }
-                                        break;
-                                    case EnumContentType.Hex:
-                                        var triggerData = HexStringToByteArray(TriggerContent);
-                                        if (CompareByteArray(Encoding.UTF8.GetBytes(str),triggerData))
-                                        {
-                                            Send();
-                                        }
-                                        break;
-                                }
+                                Send(); //执行发送内容
                             }
-                            else//不校验,直接发送
-                            {
-                                Send();//执行发送内容
-                            }
-                            
                         }
                         SetIsConnected(true);
-                        Debug.WriteLine(DateTime.Now);
+                        TraceDebug(DateTime.Now.ToString());
                         break;
                     case EnumWorkModel.OnlyReceive:
                         var sp2 = GetSerialPort();
                         if (sp2.BytesToRead > 0)
                         {
-                            var str = sp2.ReadExisting();//读取所有内容
+                            var raw2 = new byte[sp2.BytesToRead];
+                            var readCount2 = sp2.Read(raw2, 0, raw2.Length);
+                            var str = Encoding.UTF8.GetString(raw2, 0, readCount2);//读取所有内容
                             UpdateMessage($"收到内容[{str}]");
                             UpdateReceiveContent(str);
                         }
                         SetIsConnected(true);
-                        Debug.WriteLine(DateTime.Now);
-                        break; 
+                        TraceDebug(DateTime.Now.ToString());
+                        break;
                 }
             }
             catch (Exception ex)
@@ -197,6 +184,8 @@ public class CommSerialPort:AComm
         try
         {
             if (!IsEnabled) return"";
+            // 发送内容不合法属于用户输入问题：提示即可，不该断开串口
+            if (!ValidateSendContent()) return "";
             var sp = GetSerialPort();
             if (sp.BytesToRead > 0) sp.ReadExisting();//清空接收缓冲区,避免干扰被动接收模式的触发内容校验
 
@@ -206,29 +195,39 @@ public class CommSerialPort:AComm
             {
                 default:
                 case EnumContentType.Text:
-                    sendDataList.AddRange(Encoding.UTF8.GetBytes(SendContent)); //获取发送内容 
+                    sendDataList.AddRange(Encoding.UTF8.GetBytes(SendContent)); //获取发送内容
                     sendDataList.AddRange(Encoding.UTF8.GetBytes(GetEOF()));
                     sendData = sendDataList.ToArray();
                     sp.Write(sendData, 0, sendData.Length); //发送内容
                     break;
                 case EnumContentType.Hex:
-                    sendDataList.AddRange(HexStringToByteArray(SendContent)); //获取发送内容 
+                    sendDataList.AddRange(HexStringToByteArray(SendContent)); //获取发送内容
                     sendDataList.AddRange(Encoding.UTF8.GetBytes(GetEOF()));
                     sendData = sendDataList.ToArray();
                     sp.Write(sendData, 0, sendData.Length); //发送内容
                     break;
             }
 
-            for (var i = 0; i < 200; i++)
+            // 等待回包。原先固定等待最多 1 秒（200 × 5ms），
+            // 这里改成按配置的超时时间等待，且采用短间隔轮询，
+            // 一旦有数据立刻返回，避免不必要的长时间阻塞。
+            var deadline = Environment.TickCount + Math.Max(100, ReadTimeOut);
+            while (Environment.TickCount < deadline)
             {
+                if (sp.BytesToRead > 0) break; //有数据了，跳出等待
                 Thread.Sleep(5);
-                if (sp.BytesToRead > 0) break; //跳出
             }
 
             var str = sp.ReadExisting();
             UpdateReceiveContent(str);
             SetIsConnected(true);
             return str;
+        }
+        catch (ContentArgumentException ex)
+        {
+            // 参数错误：不关闭串口
+            UpdateException(ex.Message);
+            return "";
         }
         catch (Exception ex)
         {
@@ -243,6 +242,8 @@ public class CommSerialPort:AComm
         try
         {
             if (!IsEnabled) return false;
+            // 发送内容不合法属于用户输入问题：提示即可，不该断开串口
+            if (!ValidateSendContent()) return false;
             var sp = GetSerialPort();
 
             List<byte> sendDataList = new List<byte>();
@@ -266,6 +267,12 @@ public class CommSerialPort:AComm
             }
             SetIsConnected(true);
             return true;
+        }
+        catch (ContentArgumentException ex)
+        {
+            // 参数错误：不关闭串口
+            UpdateException(ex.Message);
+            return false;
         }
         catch (Exception ex)
         {
@@ -329,13 +336,13 @@ public class CommSerialPort:AComm
             {
                 default:
                 case EnumContentType.Text:
-                    sendDataList.AddRange(Encoding.UTF8.GetBytes(CancelContent)); //获取发送内容 
+                    sendDataList.AddRange(Encoding.UTF8.GetBytes(CancelContent)); //获取发送内容
                     sendDataList.AddRange(Encoding.UTF8.GetBytes(GetEOF()));
                     sendData = sendDataList.ToArray();
                     sp.Write(sendData, 0, sendData.Length); //发送内容
                     break;
                 case EnumContentType.Hex:
-                    sendDataList.AddRange(HexStringToByteArray(CancelContent)); //获取发送内容 
+                    sendDataList.AddRange(HexStringToByteArray(CancelContent)); //获取发送内容
                     sendDataList.AddRange(Encoding.UTF8.GetBytes(GetEOF()));
                     sendData = sendDataList.ToArray();
                     sp.Write(sendData, 0, sendData.Length); //发送内容
@@ -343,6 +350,12 @@ public class CommSerialPort:AComm
             }
             SetIsConnected(true);
             return true;
+        }
+        catch (ContentArgumentException ex)
+        {
+            // 参数错误：不关闭串口
+            UpdateException(ex.Message);
+            return false;
         }
         catch (Exception ex)
         {

@@ -13,6 +13,12 @@ internal static class Regression
 {
     private static int _fail;
 
+    /// <summary>
+    /// 本次回归专用的配置文件路径。注入给 ViewModel，
+    /// 避免污染 exe 同级目录下的真实 setting.json，也避免受其内容干扰。
+    /// </summary>
+    private static string _settingFile = "";
+
     public static int Run(string[] args)
     {
         _fail = 0;
@@ -20,6 +26,8 @@ internal static class Regression
         Directory.CreateDirectory(workDir);
         var prev = Directory.GetCurrentDirectory();
         Directory.SetCurrentDirectory(workDir);
+        _settingFile = Path.Combine(workDir, "regression-setting.json");
+        if (File.Exists(_settingFile)) File.Delete(_settingFile);
 
         try
         {
@@ -27,7 +35,7 @@ internal static class Regression
             TestInterfaceSwitchKeepsSettings();
             TestEnableDisable();
             TestEnumDescriptions();
-            _fail += RealConfigCheck.Run(args.Length > 1 ? args[1] : "");
+            _fail += RealConfigCheck.Run(""); // 内部自动定位仓库中的真实 setting.json
             _fail += P0ResilienceCheck.Run();
         }
         catch (Exception ex)
@@ -61,10 +69,10 @@ internal static class Regression
     private static void TestRoundTrip()
     {
         Console.WriteLine("\n[1] 配置保存 / 加载往返");
-        var file = Path.Combine(Directory.GetCurrentDirectory(), "setting.json");
+        var file = _settingFile;
         if (File.Exists(file)) File.Delete(file);
 
-        var vm = new MainWindowViewModel();
+        var vm = new MainWindowViewModel(file);
         vm.AddItemCommand.Execute(null);
         var wrap = vm.ScannerList[0];
         wrap.Scanner.Name = "测试机";
@@ -76,7 +84,7 @@ internal static class Regression
         Check("保存返回 true", vm.SaveSetting());
         Check("setting.json 已生成", File.Exists(file));
 
-        var vm2 = new MainWindowViewModel();
+        var vm2 = new MainWindowViewModel(file);
         Check("重新加载得到 1 个模拟器", vm2.ScannerList.Count == 1, $"实际 {vm2.ScannerList.Count}");
         if (vm2.ScannerList.Count == 1)
         {

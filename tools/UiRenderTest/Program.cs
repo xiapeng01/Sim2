@@ -21,6 +21,7 @@ internal static class Program
 
         if (mode == "render") return Render(outDir);
         if (mode == "combo") return ComboCheck.Run(outDir);
+        if (mode == "trigger") return TriggerCheck.Run();
         return Regression.Run(args);
     }
 

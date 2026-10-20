@@ -43,6 +43,25 @@ public enum EnumContentType
     [Description("HEX 十六进制")] Hex
 }
 
+/// <summary>
+/// 参数/内容错误异常。
+///
+/// <para>用于区分两类失败：</para>
+/// <list type="bullet">
+/// <item>参数错误（发送内容为空、不是合法十六进制、附加长度越界等）
+/// —— 是用户可预见、可自行修正的输入问题，<b>不应该</b>断开当前连接；</item>
+/// <item>连接错误（串口被占用、Socket 断开、对端无响应等）
+/// —— 需要关闭并重建连接。</item>
+/// </list>
+///
+/// <para>各通信类的 Send/Cancel/Trigger 捕获到本异常时只上报提示，不调用 Close()。</para>
+/// </summary>
+public class ContentArgumentException : ArgumentException
+{
+    public ContentArgumentException(string message) : base(message) { }
+    public ContentArgumentException(string message, string paramName) : base(message, paramName) { }
+}
+
 public interface IComm
 {
     event Action<string>? UpdateReceiveContentEvent;
@@ -97,6 +116,9 @@ public interface IComm
 //抽象类不能是分部类,此处不能继承自ObservableObject
 public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
 {
+    /// <summary>附加内容的最大长度（内部生成时用 PadLeft 补齐到这个宽度）</summary>
+    public const int MaxAppendContentLength = 10;
+
     public event Action<string>? UpdateReceiveContentEvent;
     public event Action<string>? UpdateMessageEvent;
     public event Action<string>? UpdateExceptionEvent;
@@ -422,8 +444,12 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
         get => _appendContentLength;
         set
         {
-            if (value == _appendContentLength) return;
-            _appendContentLength = value;
+            // 附加内容最长 10 位（内部用 PadLeft(10,'0') 生成），
+            // 超出范围会导致 GetAppendContent 里的 Substring 越界抛异常。
+            // 这里做钳制而不是抛异常：这是用户可预见的输入，超限就截到边界值。
+            var v = Math.Clamp(value, 1, MaxAppendContentLength);
+            if (v == _appendContentLength) return;
+            _appendContentLength = v;
             OnPropertyChanged();
         }
     }
@@ -621,6 +647,20 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
     {
     }
 
+    /// <summary>
+    /// 清空对外的事件订阅。
+    /// <para>
+    /// 释放后不应再有人收到本对象的消息，否则已删除的模拟器
+    /// 仍会被订阅方（ViewModel）持有而无法回收。
+    /// </para>
+    /// </summary>
+    public void ClearEventHandlers()
+    {
+        UpdateMessageEvent = null;
+        UpdateExceptionEvent = null;
+        UpdateReceiveContentEvent = null;
+    }
+
     public virtual void Dispose()
     {
         if (IsDisposed) return;
@@ -628,6 +668,7 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
         IsDisposed = true;
         try
         {
+            ClearEventHandlers();
             ReleaseResources();
         }
         catch (Exception ex)
@@ -669,16 +710,46 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
         target.OrderNumber = OrderNumber;
     }
 
+    /// <summary>
+    /// 校验「发送内容」是否可用于发送。
+    /// 返回 false 表示内容不合法，调用方应给出提示但<b>不要</b>断开连接。
+    /// </summary>
+    protected bool ValidateSendContent()
+    {
+        if (SendContentType != EnumContentType.Hex)
+        {
+            // 文本模式允许空内容（发空串是合法业务场景）
+            return true;
+        }
+
+        var raw = (SendContent ?? "").Replace(" ", "").Trim();
+        if (raw.Length == 0)
+        {
+            UpdateException("HEX 模式下发送内容不能为空");
+            return false;
+        }
+        try
+        {
+            HexStringToByteArray(raw);
+        }
+        catch (Exception ex)
+        {
+            UpdateException($"HEX 发送内容不合法：{ex.Message}");
+            return false;
+        }
+        return true;
+    }
+
     protected void UpdateReceiveContent(string content,[CallerMemberName] string name="")
     {
-        Debug.WriteLine($"{name}:{content}");
+        TraceDebug($"{name}:{content}");
         Post(() => ReceiveContent = content);
         UpdateReceiveContentEvent?.Invoke(content);
     }
     
     protected void UpdateMessage(string content,[CallerMemberName] string name="")
     {
-        Debug.WriteLine($"{name}:{content}");
+        TraceDebug($"{name}:{content}");
         UpdateMessageEvent?.Invoke(content);
     }
     
@@ -691,22 +762,78 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
     //十六进制字符串转字节数组
     protected byte[] HexStringToByteArray(string str)
     {
-        string t = str.Replace(" ", "").ToUpper();
-        if (t.Length <= 0) throw new Exception("内容为空");
+        string t = (str ?? "").Replace(" ", "").ToUpper();
+        // 空内容是用户可预见的输入错误（界面上的发送内容允许清空），
+        // 用 ContentArgumentException 表达，调用方可以据此提示用户而不必断开连接。
+        if (t.Length <= 0) throw new ContentArgumentException("内容为空", nameof(str));
         if (t.Length % 2 != 0) t = t + "0";//在末尾增加一个0
 
-        var ret = Enumerable.Range(0, t.Length)
-            .Where(x => x % 2 == 0)
-            .Select(y => Convert.ToByte(t.Substring(y, 2), 16))
-            .ToArray();
+        var ret = new byte[t.Length / 2];
+        for (int i = 0; i < ret.Length; i++)
+        {
+            // 非法字符同样属于输入错误
+            if (!byte.TryParse(t.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber,
+                    null, out var b))
+                throw new ContentArgumentException($"'{t.Substring(i * 2, 2)}' 不是合法的十六进制", nameof(str));
+            ret[i] = b;
+        }
         return ret;
     }
 
+    /// <summary>
+    /// 逐字节比较两个数组。长度不等直接返回 false。
+    /// </summary>
     protected bool CompareByteArray(byte[] b1, byte[] b2)
     {
+        if (b1 == null || b2 == null) return false;
         if (b1.Length == 0 || b2.Length == 0) return false;
         if (b1.Length != b2.Length) return false;
-        return !b1.Where((t, i) => t != b2[i]).Any();
+        for (int i = 0; i < b1.Length; i++)
+        {
+            if (b1[i] != b2[i]) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// 判断收到的内容是否命中「触发内容」，从而应当执行发送。
+    /// <para>
+    /// <b>文本模式</b>：把两边都 Trim 后按字符串比较（忽略首尾空白）。
+    /// </para>
+    /// <para>
+    /// <b>HEX 模式</b>：必须用<b>原始字节</b>比较，不能拿「解码后的字符串再编码回来」凑。
+    /// 因为 UTF-8 解码对非 UTF-8 合法字节是<b>有损</b>的：
+    /// 字节 <c>80 FE 41</c> 解码成字符串再编码会变成 <c>EF BF BD EF BF BD 41</c>（U+FFFD 替换字符），
+    /// 于是永远匹配不上触发内容 —— 表现为 HEX 模式下「无法触发」。
+    /// </para>
+    /// </summary>
+    /// <param name="rawBytes">收到的原始字节（未经任何解码）</param>
+    /// <param name="text">收到的文本（由 rawBytes 按 UTF-8 解码得到）</param>
+    protected bool IsTriggerMatched(byte[] rawBytes, string text)
+    {
+        if (!IsVerifyTriggerContent) return true; // 不校验，等于总是命中
+
+        switch (ReceiveContentType)
+        {
+            default:
+            case EnumContentType.Text:
+                // 字符串模式不比较空白字符
+                var clearTriggerString = (TriggerContent ?? "").Trim();
+                return clearTriggerString.Equals((text ?? "").Trim());
+
+            case EnumContentType.Hex:
+                byte[] triggerData;
+                try
+                {
+                    triggerData = HexStringToByteArray(TriggerContent);
+                }
+                catch (Exception)
+                {
+                    // 触发内容不是合法 HEX：不触发，也不该把连接踢掉
+                    return false;
+                }
+                return CompareByteArray(rawBytes, triggerData);
+        }
     }
 
     protected void SetIsConnected(bool isConnected)
@@ -719,21 +846,26 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
 
     protected string GetAppendContent()
     {
+        // 附加内容长度被限制在 1~10 位（见 AppendContentLength 的 setter）。
+        // 这里再做一次兜底钳制，避免任何途径绕过 setter 后导致 Substring 越界。
+        int len = Math.Clamp(AppendContentLength, 1, MaxAppendContentLength);
+
         switch(AppendContent)
         {
             default:
             case EnumAppendContent.None:
                 return "";
             case EnumAppendContent.Random:
-                var str = _rd.Next(0, Int32.MaxValue).ToString().PadLeft(10, '0');
-                return str.Substring(str.Length - AppendContentLength, AppendContentLength);
+                var str = _rd.Next(0, Int32.MaxValue).ToString().PadLeft(MaxAppendContentLength, '0');
+                return str.Substring(str.Length - len, len);
             case EnumAppendContent.OrderNumber:
-                var str2 = (OrderNumber++).ToString().PadLeft(10,'0');
-                return str2.Substring(str2.Length - AppendContentLength, AppendContentLength);
+                var str2 = (OrderNumber++).ToString().PadLeft(MaxAppendContentLength, '0');
+                return str2.Substring(str2.Length - len, len);
             case EnumAppendContent.ParseAndSend:
-                var sendList = SendContent.Split("|");//解析发送内容,每个内容之间用|分隔                
-                return sendList[_rd.Next(0,sendList.Length)];
-        } 
+                var sendList = SendContent.Split("|");//解析发送内容,每个内容之间用|分隔
+                if (sendList.Length == 0) return "";
+                return sendList[_rd.Next(0, sendList.Length)];
+        }
     }
 
     protected string GetEOF()
@@ -752,8 +884,31 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
         }
     }
     
+    /// <summary>
+    /// 应用是否正在退出。退出过程中 Dispatcher 会被关闭，
+    /// 此时再 BeginInvoke 会抛 TaskCanceledException，因此所有 UI 投递都要先检查这个标志。
+    /// </summary>
+    public static volatile bool IsShuttingDown;
+
+    /// <summary>
+    /// 是否输出高频调试日志（每次收发内容、每次心跳）。
+    /// <para>
+    /// 默认关闭：这些输出在 DEBUG 版下会刷爆输出窗口，
+    /// 收发明细本来就通过界面上的「运行日志」呈现，无需再写一遍到调试输出。
+    /// </para>
+    /// </summary>
+    public static bool VerboseDebug { get; set; }
+
+    /// <summary>输出调试信息。仅在 <see cref="VerboseDebug"/> 打开时真正写入。</summary>
+    protected static void TraceDebug(string message)
+    {
+        if (VerboseDebug) Debug.WriteLine(message);
+    }
+
     protected bool Post(Action act)
     {
+        // 退出过程中不再投递到 UI 线程，避免 Dispatcher 已关闭导致的未捕获异常
+        if (IsShuttingDown) return false;
         try
         {
             var dispatcher = Application.Current?.Dispatcher;
@@ -782,6 +937,13 @@ public abstract class AComm : IComm, INotifyPropertyChanged, IDisposable
         }
     }
     
+    /// <summary>
+    /// 检查 Socket 是否仍然可用（未断开）。
+    /// <para>
+    /// 注意：<see cref="Socket.Poll(int, SelectMode)"/> 的第一个参数单位是<b>微秒</b>，
+    /// 这里传 1000 表示 1 毫秒的超时，而不是 1 秒。
+    /// </para>
+    /// </summary>
     protected bool CheckConnected(Socket? s)
     {
         return s != null && !(s.Poll(1000, SelectMode.SelectRead) && (s.Available == 0)) && s.Connected;
@@ -803,27 +965,12 @@ public partial class ScannerWrap : ObservableObject, IDisposable
 
     public ScannerWrap()
     {
-        _ = Task.Run(CheckScannerIsEnabled);
+        // 说明：早期版本这里会启动一个 CheckScannerIsEnabled 后台循环，
+        // 但它每 50ms 醒一次却什么都不做（纯空转），白白占用线程池。
+        // 各通信类自身的工作循环已经会在 IsEnabled == false 时释放端口/连接并可再次恢复，
+        // 因此这里不再需要任何后台任务。
     }
 
-    async Task CheckScannerIsEnabled()
-    {
-        while (!_isDisposed)
-        {
-            try
-            {
-                await Task.Delay(50);
-                // 注意：这里不能调用 Scanner.Dispose()。
-                // Dispose 会把 IsDisposed 置为 true，导致通信类内部的工作循环永久退出，
-                // 之后重新勾选"启用"也不会再工作。
-                // 各通信类自身的循环已经会在 IsEnabled == false 时释放端口/连接并可再次恢复。
-            }
-            catch
-            {
-                // ignored
-            }
-        }
-    }
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
@@ -931,6 +1078,9 @@ public partial class ScannerWrap : ObservableObject, IDisposable
         _isDisposed = true;
         try
         {
+            // 解除对外的事件订阅：Dispose 之后不应再有人收到本对象的消息，
+            // 否则已删除的模拟器仍会被 ViewModel 持有而无法回收。
+            Scanner?.ClearEventHandlers();
             Scanner?.Dispose();
         }
         catch (Exception ex)

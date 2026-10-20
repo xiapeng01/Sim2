@@ -4,16 +4,22 @@ using 模拟扫码枪;
 namespace 模拟扫码枪.Tests;
 
 /// <summary>
-/// 为每个测试提供独立的工作目录。
+/// 为每个测试提供独立的工作目录与独立的配置文件路径。
 ///
 /// <para>
-/// 背景：<c>MainWindowViewModel</c> 使用相对路径 <c>"setting.json"</c> 读写配置，
+/// 背景：<c>MainWindowViewModel</c> 的配置文件路径原先是相对路径 <c>"setting.json"</c>，
 /// 依赖进程的当前工作目录，而 xUnit 默认并行执行不同测试类，
 /// 若多个测试同时切换目录就会互相干扰（表现为"单跑通过、全跑失败"）。
 /// </para>
 ///
 /// <para>
-/// 因此本基类在构造函数中先把进程目录固定到一个专用锚点目录再切走，
+/// 现在配置路径已改为绝对路径（默认在 exe 同级目录），但同一进程内的多个
+/// <c>MainWindowViewModel</c> 实例仍会共用同一个文件而互相污染，
+/// 因此这里通过构造函数注入各自的隔离路径。
+/// </para>
+///
+/// <para>
+/// 本基类在构造函数中先把进程目录固定到一个专用锚点目录再切走，
 /// 各测试只在自己的 <see cref="AnchorDir"/> 中读写互不影响；
 /// <see cref="Dispose"/> 由 xUnit 在每个用例结束后自动调用。
 /// </para>
@@ -42,6 +48,12 @@ public abstract class TempDirTestBase : IDisposable
     /// <summary>本用例独占的工作目录</summary>
     protected string AnchorDir { get; }
 
+    /// <summary>本用例独占的配置文件路径（注入给 ViewModel）</summary>
+    protected string SettingFilePath => Path.Combine(AnchorDir, "setting.json");
+
+    /// <summary>创建一个使用本用例隔离配置文件的 ViewModel</summary>
+    protected MainWindowViewModel CreateViewModel() => new(SettingFilePath);
+
     public void Dispose()
     {
         try
@@ -67,13 +79,13 @@ public abstract class TempDirTestBase : IDisposable
 
     /// <summary>把配置文件写入本用例的隔离目录</summary>
     protected void WriteSetting(string json)
-        => File.WriteAllText(Path.Combine(AnchorDir, "setting.json"), json);
+        => File.WriteAllText(SettingFilePath, json);
 
     /// <summary>读取本用例隔离目录中的配置文件</summary>
     protected string ReadSetting()
-        => File.ReadAllText(Path.Combine(AnchorDir, "setting.json"));
+        => File.ReadAllText(SettingFilePath);
 
-    protected bool SettingExists => File.Exists(Path.Combine(AnchorDir, "setting.json"));
+    protected bool SettingExists => File.Exists(SettingFilePath);
 }
 
 /// <summary>

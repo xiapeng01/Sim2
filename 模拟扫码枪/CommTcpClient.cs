@@ -93,59 +93,40 @@ public class CommTcpClient:AComm
                     case EnumWorkModel.Passive:
                         var s = GetStream();
                         byte[] buffer = new byte[4096];
-                        int n = s.Read(buffer); //读取所有内容
+                        // 用带超时的读，而不是阻塞的 s.Read()：
+                        // 阻塞读会一直占住工作循环，导致后续的连接检查/取消命令无法响应
+                        int n = ReadWithTimeout(s, buffer);
                         if (n > 0)
                         {
-                            Array.Resize(ref buffer, n);
-                            var str = Encoding.UTF8.GetString(buffer);
+                            var raw = new byte[n];
+                            Array.Copy(buffer, raw, n);
+                            var str = Encoding.UTF8.GetString(raw);
                             UpdateMessage($"收到内容[{str}]");
-                            if (IsVerifyTriggerContent) //通过校验才发送
+                            // 触发匹配统一走基类：HEX 模式用原始字节比较，
+                            // 不能用「解码成字符串再编码回来」（对非 UTF-8 合法字节有损）
+                            if (IsTriggerMatched(raw, str))
                             {
-                                switch (ReceiveContentType)
-                                {
-                                    default:
-                                    case EnumContentType.Text: //字符串模式不比较空白字符
-                                        var clearTriggerString = TriggerContent.Trim();
-                                        if (clearTriggerString.Equals(str.Trim()))
-                                        {
-                                            Send();
-                                        }
-
-                                        break;
-                                    case EnumContentType.Hex:
-                                        var triggerData = HexStringToByteArray(TriggerContent);
-                                        if (CompareByteArray(Encoding.UTF8.GetBytes(str), triggerData))
-                                        {
-                                            Send();
-                                        }
-
-                                        break;
-                                }
-                            }
-                            else //不校验,直接发送
-                            {
-                                Send(); //执行发送内容
+                                Send();
                             }
                         }
 
 
                         SetIsConnected(true);
-                        Debug.WriteLine(DateTime.Now);
+                        TraceDebug(DateTime.Now.ToString());
                         break;
                     case EnumWorkModel.OnlyReceive:
                         var s2 = GetStream();
                         var buffer2 = new byte[4096];
-                        var n2 = s2.Read(buffer2);
+                        var n2 = ReadWithTimeout(s2, buffer2);
                         if (n2 > 0)
                         {
-                            Array.Resize(ref buffer2, n2);
-                            var str = Encoding.UTF8.GetString(buffer2); //读取所有内容
+                            var str = Encoding.UTF8.GetString(buffer2, 0, n2); //读取所有内容
                             UpdateMessage($"收到内容[{str}]");
                             UpdateReceiveContent(str);
                         }
 
                         SetIsConnected(true);
-                        Debug.WriteLine(DateTime.Now);
+                        TraceDebug(DateTime.Now.ToString());
                         break;
                 }
             }
@@ -249,6 +230,14 @@ public class CommTcpClient:AComm
                 client.Connect(TcpIP, TcpPort);
                 _client = client;
             }
+            else
+            {
+                // 复用已有连接时也要保证超时设置是最新的：
+                // 同步 Read 依赖 Socket.ReceiveTimeout 才能及时返回，
+                // 否则会一直阻塞到对端发数据，工作循环被拖死。
+                _client.ReceiveTimeout = ReadTimeOut;
+                _client.SendTimeout = WriteTimeOut;
+            }
             return _client.GetStream();
         }
     }
@@ -258,6 +247,8 @@ public class CommTcpClient:AComm
         try
         {
             if (!IsEnabled) return"";
+            // 发送内容不合法属于用户输入问题：提示即可，不该断开连接
+            if (!ValidateSendContent()) return "";
             var s = GetStream();
 
             List<byte> sendDataList = new List<byte>();
@@ -266,13 +257,13 @@ public class CommTcpClient:AComm
             {
                 default:
                 case EnumContentType.Text:
-                    sendDataList.AddRange(Encoding.UTF8.GetBytes(SendContent)); //获取发送内容 
+                    sendDataList.AddRange(Encoding.UTF8.GetBytes(SendContent)); //获取发送内容
                     sendDataList.AddRange(Encoding.UTF8.GetBytes(GetEOF()));
                     sendData = sendDataList.ToArray();
                     s.Write(sendData, 0, sendData.Length); //发送内容
                     break;
                 case EnumContentType.Hex:
-                    sendDataList.AddRange(HexStringToByteArray(SendContent)); //获取发送内容 
+                    sendDataList.AddRange(HexStringToByteArray(SendContent)); //获取发送内容
                     sendDataList.AddRange(Encoding.UTF8.GetBytes(GetEOF()));
                     sendData = sendDataList.ToArray();
                     s.Write(sendData, 0, sendData.Length); //发送内容
@@ -280,19 +271,28 @@ public class CommTcpClient:AComm
             }
 
             var buffer = new byte[4096];
-            for (var i = 0; i < 100; i++)
+            // 等待回包。用同步读（遵守 socket 的 ReceiveTimeout），
+            // 按总时长控制等待时间：不能靠「循环 100 次」，
+            // 因为每次读都会阻塞满一个超时周期，累加后可能达到几十秒。
+            var deadline = Environment.TickCount + Math.Max(500, ReadTimeOut);
+            while (Environment.TickCount < deadline)
             {
-                var n = s.Read(buffer);
+                var n = ReadWithTimeout(s, buffer);
                 if (n > 0)
                 {
-                    Array.Resize(ref buffer,n);
-                    var str = Encoding.UTF8.GetString(buffer);
+                    var str = Encoding.UTF8.GetString(buffer, 0, n);
                     UpdateReceiveContent(str);
                     SetIsConnected(true);
                     return str;
                 }
             }
 
+            return "";
+        }
+        catch (ContentArgumentException ex)
+        {
+            // 参数错误：不关闭连接
+            UpdateException(ex.Message);
             return "";
         }
         catch (Exception ex)
@@ -303,11 +303,44 @@ public class CommTcpClient:AComm
         }
     }
 
+    /// <summary>
+    /// 带超时的读取。超时返回 0（本次没有数据），不抛异常、不阻塞调用线程。
+    /// <para>
+    /// <b>超时时绝不能把挂起的读任务遗弃在后台</b>：早期实现用 <c>readTask.Wait(timeout)</c>，
+    /// 超时后把挂起的 <c>ReadAsync</c> 留在流上，数据到达时会被那个「僵尸任务」
+    /// 读走并丢弃，后续永远读不到数据 —— 表现为「无法触发」。
+    /// 改用<b>同步 Read</b>：.NET 的 <c>NetworkStream.Read</c> 会遵守
+    /// <c>Socket.ReceiveTimeout</c>，超时抛 <see cref="IOException"/>，不遗留任务。
+    /// </para>
+    /// </summary>
+    private static int ReadWithTimeout(Stream s, byte[] buffer, int timeoutMs = 200)
+    {
+        try
+        {
+            return s.Read(buffer, 0, buffer.Length);
+        }
+        catch (IOException)
+        {
+            // 接收超时或网络错误
+            return 0;
+        }
+        catch (SocketException)
+        {
+            return 0;
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
+    }
+
     public override bool Send()
     {
         try
         {
             if (!IsEnabled) return false;
+            // 发送内容不合法属于用户输入问题：提示即可，不该断开连接
+            if (!ValidateSendContent()) return false;
             var s = GetStream();
 
             List<byte> sendDataList = new List<byte>();
@@ -331,6 +364,12 @@ public class CommTcpClient:AComm
             }
             SetIsConnected(true);
             return true;
+        }
+        catch (ContentArgumentException ex)
+        {
+            // 参数错误：不关闭连接
+            UpdateException(ex.Message);
+            return false;
         }
         catch (Exception ex)
         {
@@ -394,13 +433,13 @@ public class CommTcpClient:AComm
             {
                 default:
                 case EnumContentType.Text:
-                    sendDataList.AddRange(Encoding.UTF8.GetBytes(CancelContent)); //获取发送内容 
+                    sendDataList.AddRange(Encoding.UTF8.GetBytes(CancelContent)); //获取发送内容
                     sendDataList.AddRange(Encoding.UTF8.GetBytes(GetEOF()));
                     sendData = sendDataList.ToArray();
                     s.Write(sendData, 0, sendData.Length); //发送内容
                     break;
                 case EnumContentType.Hex:
-                    sendDataList.AddRange(HexStringToByteArray(CancelContent)); //获取发送内容 
+                    sendDataList.AddRange(HexStringToByteArray(CancelContent)); //获取发送内容
                     sendDataList.AddRange(Encoding.UTF8.GetBytes(GetEOF()));
                     sendData = sendDataList.ToArray();
                     s.Write(sendData, 0, sendData.Length); //发送内容
@@ -408,6 +447,12 @@ public class CommTcpClient:AComm
             }
             SetIsConnected(true);
             return true;
+        }
+        catch (ContentArgumentException ex)
+        {
+            // 参数错误：不关闭连接
+            UpdateException(ex.Message);
+            return false;
         }
         catch (Exception ex)
         {

@@ -152,11 +152,17 @@ public class ACommLogicTests
     /// 本用例把该缺陷固化为可观测行为，修复后应改为通过。
     /// </summary>
     [Fact]
-    public void GetAppendContent_长度大于10时当前会抛越界异常()
+    public void GetAppendContent_长度大于10时被钳制为10且不抛异常()
     {
         _comm.AppendContent = EnumAppendContent.Random;
         _comm.AppendContentLength = 20;
-        Assert.ThrowsAny<ArgumentOutOfRangeException>(() => _comm.InvokeGetAppendContent());
+        // 修复前：PadLeft(10) 固定 10 位，Substring(10-20=-5) 抛 ArgumentOutOfRangeException，
+        // 异常被 Send() 捕获后触发 Close()，用户只是填错长度却把连接踢掉。
+        // 现在 setter 钳制为 1~10，兜底处再钳一次，任何途径都不会越界。
+        Assert.Equal(10, _comm.AppendContentLength);
+        var result = _comm.InvokeGetAppendContent();
+        Assert.Equal(10, result.Length);
+        Assert.All(result, c => Assert.True(char.IsDigit(c)));
     }
 
     // ---------- 属性通知 ----------

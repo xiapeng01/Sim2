@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.IO;
 using Newtonsoft.Json;
 
@@ -9,6 +9,7 @@ namespace 模拟扫码枪.Tests;
 /// </summary>
 public class AutoConfirmViewModel : MainWindowViewModel
 {
+    public AutoConfirmViewModel(string? settingFilePath = null) : base(settingFilePath) { }
     public bool ConfirmResult { get; set; } = true;
     protected override bool ConfirmRemove(string name) => ConfirmResult;
 }
@@ -24,7 +25,7 @@ public sealed class SettingPersistenceTests : TempDirTestBase
     [Fact]
     public void 保存后应生成setting文件()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         vm.ScannerList[0].Scanner.Name = "我的模拟器";
 
@@ -35,7 +36,7 @@ public sealed class SettingPersistenceTests : TempDirTestBase
     [Fact]
     public void 保存再加载数据应一致()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         var item = vm.ScannerList[0];
         item.Scanner.Name = "回环测试";
@@ -49,7 +50,7 @@ public sealed class SettingPersistenceTests : TempDirTestBase
         item.Scanner.IsVerifyTriggerContent = false;
         Assert.True(vm.SaveSetting());
 
-        var reloaded = new MainWindowViewModel();
+        var reloaded = CreateViewModel();
         Assert.Single(reloaded.ScannerList);
         var r = reloaded.ScannerList[0];
         Assert.Equal("回环测试", r.Scanner.Name);
@@ -66,14 +67,14 @@ public sealed class SettingPersistenceTests : TempDirTestBase
     [Fact]
     public void 加载时内外层接口类型应一致()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         vm.AddItemCommand.Execute(null);
         vm.ScannerList[0].InterfaceType = EnumInterfaceType.TcpServer;
         vm.ScannerList[1].InterfaceType = EnumInterfaceType.TcpClient;
         Assert.True(vm.SaveSetting());
 
-        var reloaded = new MainWindowViewModel();
+        var reloaded = CreateViewModel();
         foreach (var w in reloaded.ScannerList)
         {
             Assert.Equal(w.InterfaceType, w.Scanner.InterfaceType);
@@ -83,7 +84,7 @@ public sealed class SettingPersistenceTests : TempDirTestBase
     [Fact]
     public void 文件不存在时加载应失败但不抛异常()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         Assert.Empty(vm.ScannerList);
     }
 
@@ -91,7 +92,7 @@ public sealed class SettingPersistenceTests : TempDirTestBase
     public void 内容损坏时加载应被捕获()
     {
         WriteSetting("{ 这不是合法 JSON ");
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         Assert.Empty(vm.ScannerList);
         Assert.Contains(vm.Logs, l => l.Level == LogLevel.Error);
     }
@@ -113,7 +114,7 @@ public sealed class SettingPersistenceTests : TempDirTestBase
                  + "]";
         WriteSetting(json);
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         Assert.Single(vm.ScannerList);
         var w = vm.ScannerList[0];
         Assert.Equal(EnumInterfaceType.TcpServer, w.InterfaceType);
@@ -133,19 +134,19 @@ public sealed class SettingPersistenceTests : TempDirTestBase
     public void 加载空数组应得到空列表()
     {
         WriteSetting("[]");
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         Assert.Empty(vm.ScannerList);
     }
 
     [Fact]
     public void 加载后应自动选中第一个模拟器()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         vm.AddItemCommand.Execute(null);
         vm.SaveSetting();
 
-        var reloaded = new MainWindowViewModel();
+        var reloaded = CreateViewModel();
         Assert.NotNull(reloaded.Scanner);
         Assert.Same(reloaded.ScannerList[0], reloaded.Scanner);
         Assert.True(reloaded.IsCanDelected);
@@ -159,7 +160,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 新增后列表应增加且选中新项()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
 
         Assert.Single(vm.ScannerList);
@@ -170,7 +171,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 列表数量应随增删变化()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         vm.AddItemCommand.Execute(null);
         Assert.Equal(2, vm.ScannerCount);
@@ -179,7 +180,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 删除后应重新选中第一项()
     {
-        var vm = new AutoConfirmViewModel();
+        var vm = new AutoConfirmViewModel(SettingFilePath);
         vm.AddItemCommand.Execute(null);
         vm.AddItemCommand.Execute(null);
 
@@ -193,7 +194,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 用户取消确认时不应删除()
     {
-        var vm = new AutoConfirmViewModel { ConfirmResult = false };
+        var vm = new AutoConfirmViewModel(SettingFilePath) { ConfirmResult = false };
         vm.AddItemCommand.Execute(null);
         vm.RemoveItemCommand.Execute(null);
         Assert.Single(vm.ScannerList);
@@ -202,7 +203,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 未选中时不应允许删除()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         vm.Scanner = null;
         Assert.False(vm.IsCanDelected);
@@ -212,7 +213,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 切换接口类型后应仍可删除()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         vm.ScannerList[0].InterfaceType = EnumInterfaceType.TcpClient;
         Assert.True(vm.IsCanDelected);
@@ -221,7 +222,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 清空日志应移除全部条目()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         Assert.NotEmpty(vm.Logs);
 
@@ -232,7 +233,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 日志应包含级别信息()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         Assert.Contains(vm.Logs, l => l.Level == LogLevel.Success);
     }
@@ -240,7 +241,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void DisposeAll不应抛异常()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         vm.AddItemCommand.Execute(null);
         var ex = Record.Exception(() => vm.DisposeAll());
@@ -250,7 +251,7 @@ public class MainWindowViewModelTests : TempDirTestBase
     [Fact]
     public void 自动滚动开关默认为开启()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         Assert.True(vm.AutoScroll);
     }
 
@@ -271,7 +272,7 @@ public class ScannerListNotificationTests : TempDirTestBase
     [Fact]
     public void 替换列表后增删应触发数量更新()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         int notifications = 0;
         vm.PropertyChanged += (_, e) =>
         {
@@ -290,7 +291,7 @@ public class ScannerListNotificationTests : TempDirTestBase
     public void 初始列表的增删也应刷新数量()
     {
         // 报告 P2 #16：字段初始化绕过了 setter，可能导致未订阅 ListChanged
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         vm.AddItemCommand.Execute(null);
         Assert.Equal(1, vm.ScannerCount);
     }

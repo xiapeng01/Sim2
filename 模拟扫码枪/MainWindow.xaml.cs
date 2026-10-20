@@ -38,6 +38,8 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
+        // 标记正在退出：此后通信线程不再向已关闭的 Dispatcher 投递
+        AComm.IsShuttingDown = true;
         if (DataContext is MainWindowViewModel vm)
         {
             vm.SaveSetting();
